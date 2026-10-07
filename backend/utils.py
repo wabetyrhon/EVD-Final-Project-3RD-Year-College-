@@ -13,6 +13,11 @@ from functools import wraps
 from flask import jsonify
 
 
+def generate_random_id():
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(8))
+
+
 def get_gmail_service():
     """Authenticates using environment variables and returns the Gmail service client."""
     creds = Credentials(

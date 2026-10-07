@@ -1,5 +1,6 @@
 Flask
 Flask-SQLAlchemy
+pymysql
 flask-cors
 Gunicorn
 google-api-python-client

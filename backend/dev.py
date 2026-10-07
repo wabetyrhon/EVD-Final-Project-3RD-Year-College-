@@ -5,6 +5,7 @@ from flask import jsonify, request
 from sqlalchemy import text
 
 from backend import app, db
+from backend.models import Reservation, Item
 
 def reset_database():
     with app.app_context():

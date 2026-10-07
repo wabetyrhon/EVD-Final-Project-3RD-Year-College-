@@ -8,6 +8,11 @@ app = Flask(__name__, static_folder="../frontend", static_url_path="")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = getenv("DB_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'connect_args': {
+            'ssl': {}
+            }
+        }
 
 db = SQLAlchemy(app)
 
