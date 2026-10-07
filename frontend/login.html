@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Admin Login</title>
+		<style>
+body {
+	font-family: Arial, sans-serif;
+	background-color: #f4f6f9;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	margin: 0;
+}
+	.login-card {
+		background: #fff;
+		padding: 30px;
+		border-radius: 8px;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		width: 100%;
+		max-width: 320px;
+		text-align: center;
+	}
+	h2 { margin-bottom: 20px; color: #333; }
+	input[type="password"] {
+		width: 100%;
+		padding: 12px;
+		margin-bottom: 20px;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		box-sizing: border-box;
+		font-size: 16px;
+	}
+	button {
+		width: 100%;
+		padding: 12px;
+		background-color: #007bff;
+		color: #fff;
+		border: none;
+		border-radius: 4px;
+		font-size: 16px;
+		cursor: pointer;
+	}
+	button:hover { background-color: #0056b3; }
+	.error { color: #dc3545; margin-bottom: 15px; font-size: 14px; display: none; }
+		</style>
+	</head>
+	<body>
+
+		<div class="login-card">
+			<h2>Admin Access</h2>
+
+			<!-- Error message block controlled by client JavaScript -->
+			<div id="error-message" class="error">Invalid password. Access denied.</div>
+
+			<form action="/login" method="POST">
+				<input type="password" name="password" placeholder="Enter Admin Password" required autofocus>
+				<button type="submit">Login</button>
+			</form>
+		</div>
+
+		<script>
+			// Check if the URL has an 'error' flag (e.g., /static/login.html?error=1)
+			const urlParams = new URLSearchParams(window.location.search);
+			if (urlParams.has('error')) {
+				document.getElementById('error-message').style.display = 'block';
+			}
+		</script>
+
+	</body>
+</html>
