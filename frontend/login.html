@@ -4,6 +4,10 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Admin Login</title>
+
+		<link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+		<script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
 		<style>
 body {
 	font-family: Arial, sans-serif;
@@ -61,12 +65,16 @@ body {
 			</form>
 		</div>
 
-		<script>
-			// Check if the URL has an 'error' flag (e.g., /static/login.html?error=1)
-			const urlParams = new URLSearchParams(window.location.search);
-			if (urlParams.has('error')) {
-				document.getElementById('error-message').style.display = 'block';
-			}
+		<script type="py">
+		from pyscript import window
+
+		url_params = window.URLSearchParams.new(window.location.search)
+
+		error_element = None
+		if url_params.has('error'):
+			error_element = window.document.getElementById('error-message')
+		if error_element:
+			error_element.style.display = 'block'
 		</script>
 
 	</body>
