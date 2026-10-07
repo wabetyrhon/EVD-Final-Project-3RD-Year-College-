@@ -1,0 +1,7 @@
+Flask
+Flask-SQLAlchemy
+flask-cors
+Gunicorn
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
