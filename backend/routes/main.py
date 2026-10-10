@@ -29,10 +29,6 @@ def admin_dashboard():
         return redirect("/login")
     return app.send_static_file("admin.html")
 
-@main_bp.route("/customer")
-def customer_page():
-    return app.send_static_file("customer.html")
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if not ADMIN_HASH:
