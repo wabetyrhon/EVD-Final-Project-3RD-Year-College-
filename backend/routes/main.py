@@ -1,12 +1,23 @@
-from flask import Blueprint, abort, request, session, redirect
+from flask import Blueprint, abort, request, session, redirect, jsonify
 from werkzeug.security import check_password_hash
 
 from backend import app, db, ADMIN_HASH
 from backend.utils import admin_required
 
+from backend.models import Category
 
 main_bp = Blueprint("main", __name__)
 
+
+@main_bp.route("/api/categories", methods=["GET"])
+def get_categories():
+    """Read all products (Accessible to anyone)."""
+    categories = Category.query.all()
+    result = [{
+        "category_id": c.category_id,
+        "name": c.name
+        } for c in categories]
+    return jsonify(result), 200
 
 @main_bp.route('/')
 def homepage():

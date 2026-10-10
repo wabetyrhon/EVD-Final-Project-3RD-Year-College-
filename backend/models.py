@@ -29,7 +29,19 @@ class Product(db.Model):
     product_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     unit = db.Column(db.String(20), nullable=False)
+
+    img_url = db.Column(db.String(200), nullable=False)
+
     price = db.Column(db.Integer, nullable=False)
 
+    category_id = db.Column(db.Integer, db.ForeignKey("category.category_id"), nullable=False)
+    category = db.relationship("Category", back_populates="products")
+
     reservation_items = db.relationship("ReservationItem", back_populates="product")
+
+class Category(db.Model):
+    category_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+
+    products = db.relationship("Product", back_populates="category")
 

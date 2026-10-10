@@ -2,223 +2,335 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Reservation System</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PyScript CSS & JS -->
-    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
-    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    <title>Admin Dashboard</title>
+    <!-- Tailwind CSS for modern styling -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- PyScript Core CSS & JS (Latest Version) -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.2/core.css">
+    <script type="module" src="https://pyscript.net/releases/2026.7.2/core.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-lg shadow">
-            <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-            <button py-click="logout" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium">Logout</button>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar Navigation -->
+        <div class="w-64 bg-white shadow-md">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">Admin Panel</h2>
+            </div>
+            <nav class="mt-6">
+                <a href="#" id="nav-products" class="block py-2 px-6 text-gray-700 hover:bg-gray-200">Manage Products</a>
+                <a href="#" id="nav-reservations" class="block py-2 px-6 text-gray-700 hover:bg-gray-200">Manage Reservations</a>
+            </nav>
         </div>
 
-        <!-- Product Management Section -->
-        <div class="bg-white p-6 rounded-lg shadow mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-gray-700">Manage Products</h2>
-            
-            <!-- Add/Edit Product Form -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded border">
-                <input type="hidden" id="product_id" value="">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Product Name</label>
-                    <input type="text" id="prod_name" placeholder="Item Name" class="w-full border p-2 rounded text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Unit</label>
-                    <input type="text" id="prod_unit" placeholder="e.g., pcs, kg" class="w-full border p-2 rounded text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Price (in Pesos)</label>
-                    <input type="number" id="prod_price" placeholder="1000" class="w-full border p-2 rounded text-sm">
-                </div>
-                <div class="flex items-end gap-2">
-                    <button py-click="save_product" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded text-sm font-medium">Save Product</button>
-                    <button py-click="clear_product_form" class="bg-gray-300 hover:bg-gray-400 text-gray-800 p-2 rounded text-sm">Clear</button>
-                </div>
-            </div>
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-y-hidden">
+            <header class="bg-white shadow-sm py-4 px-6 flex justify-between items-center">
+                <h1 class="text-xl font-semibold text-gray-800" id="section-title">Manage Products</h1>
+                <a href="/logout" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 text-sm">Logout</a>
+            </header>
 
-            <!-- Products Table -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-100 border-b text-sm text-gray-600">
-                            <th class="p-3">ID</th>
-                            <th class="p-3">Name</th>
-                            <th class="p-3">Unit</th>
-                            <th class="p-3">Price</th>
-                            <th class="p-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="products_table_body" class="text-sm divide-y">
-                        <!-- Populated by PyScript -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                
+                <!-- Error Banner -->
+                <div id="error-banner" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span id="error-message" class="block sm:inline"></span>
+                </div>
 
-        <!-- Reservations List Section -->
-        <div class="bg-white p-6 rounded-lg shadow">
-            <h2 class="text-xl font-semibold mb-4 text-gray-700">All Reservations</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-100 border-b text-sm text-gray-600">
-                            <th class="p-3">Res ID</th>
-                            <th class="p-3">Customer</th>
-                            <th class="p-3">Email / Phone</th>
-                            <th class="p-3">Pickup Date</th>
-                            <th class="p-3">Items</th>
-                            <th class="p-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reservations_table_body" class="text-sm divide-y">
-                        <!-- Populated by PyScript -->
-                    </tbody>
-                </table>
-            </div>
+                <!-- 1. Products Section -->
+                <div id="products-section" class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Product Management</h2>
+                    
+                    <!-- Add/Edit Product Form -->
+                    <div class="bg-white p-6 rounded shadow">
+                        <h3 class="text-lg font-semibold mb-4" id="product-form-title">Add New Product</h3>
+                        <input type="hidden" id="product-id">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" id="prod-name" placeholder="Product Name" class="border p-2 rounded">
+                            <input type="text" id="prod-unit" placeholder="Unit (e.g., kg, pcs)" class="border p-2 rounded">
+                            <input type="number" step="0.01" id="prod-price" placeholder="Price" class="border p-2 rounded">
+                            
+                            <!-- Categories Dropdown populated from /api/categories -->
+                            <select id="prod-category" class="border p-2 rounded">
+                                <option value="">Select Category</option>
+                            </select>
+                            
+                            <input type="text" id="prod-img" placeholder="Image URL" class="border p-2 rounded col-span-2">
+                        </div>
+                        <div class="mt-4 flex space-x-3">
+                            <button id="save-product-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Product</button>
+                            <button id="cancel-edit-btn" class="hidden bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+                        </div>
+                    </div>
+
+                    <!-- Products Table -->
+                    <div class="bg-white rounded shadow overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image URL</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Populated dynamically by PyScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2. Reservations Section -->
+                <div id="reservations-section" class="space-y-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800">Reservation Management</h2>
+                    <div class="bg-white rounded shadow overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Res ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pickup Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservations-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Populated dynamically by PyScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 
     <!-- PyScript Logic -->
     <script type="py">
+        import asyncio
+        from pyscript import document
+        from pyscript.ffi import create_proxy
         import js
         import json
-        from pyodide.http import pyfetch
 
-        async def check_admin_auth():
-            response = await pyfetch("/api/reservations", method="GET")
-            if response.status == 403:
-                js.window.location.href = "/login"
+        def show_error(msg):
+            banner = document.getElementById("error-banner")
+            message_span = document.getElementById("error-message")
+            message_span.innerText = msg
+            banner.classList.remove("hidden")
+
+        def clear_error():
+            banner = document.getElementById("error-banner")
+            banner.classList.add("hidden")
+
+        def show_section(section_name, event=None):
+            if event is not None:
+                event.preventDefault()
+            prod_sec = document.getElementById("products-section")
+            res_sec = document.getElementById("reservations-section")
+            title = document.getElementById("section-title")
+            
+            prod_sec.classList.add("hidden")
+            res_sec.classList.add("hidden")
+            
+            if section_name == "products":
+                prod_sec.classList.remove("hidden")
+                title.innerText = "Manage Products"
+            elif section_name == "reservations":
+                res_sec.classList.remove("hidden")
+                title.innerText = "Manage Reservations"
+
+        document.getElementById("nav-products").addEventListener("click", create_proxy(lambda e: show_section("products", e)))
+        document.getElementById("nav-reservations").addEventListener("click", create_proxy(lambda e: show_section("reservations", e)))
+
+        async def api_fetch(url, method="GET", body=None):
+            init = js.Object.new()
+            init.method = method
+            
+            headers = js.window.Headers.new()
+            headers.set("Content-Type", "application/json")
+            init.headers = headers
+            
+            if body is not None:
+                init.body = json.dumps(body)
+            
+            response = await js.window.fetch(url, init)
+            return response
+
+        async def load_categories():
+            try:
+                response = await api_fetch("/api/categories")
+                if response.ok:
+                    data = await response.json()
+                    categories = data.to_py() if hasattr(data, "to_py") else data
+                    select = document.getElementById("prod-category")
+                    select.innerHTML = '<option value="">Select Category</option>'
+                    for cat in categories:
+                        opt = document.createElement("option")
+                        opt.value = str(cat["category_id"])
+                        opt.text = cat["name"]
+                        select.appendChild(opt)
+            except Exception as e:
+                print(f"Error loading categories: {e}")
 
         async def load_products():
-            response = await pyfetch("/api/products", method="GET")
-            if response.status == 200:
-                data = await response.json()
-                tbody = js.document.getElementById("products_table_body")
-                tbody.innerHTML = ""
-                for p in data:
-                    p_id = p["product_id"]
-                    row = f"""
-                    <tr>
-                        <td class="p-3">{p_id}</td>
-                        <td class="p-3">{p["name"]}</td>
-                        <td class="p-3">{p["unit"]}</td>
-                        <td class="p-3">{p["price"]}</td>
-                        <td class="p-3 text-right space-x-2">
-                            <button onclick="window.editProduct({p_id}, '{p["name"]}', '{p["unit"]}', {p["price"]})" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit</button>
-                            <button onclick="window.deleteProduct({p_id})" class="bg-red-500 text-white px-2 py-1 rounded text-xs">Delete</button>
-                        </td>
-                    </tr>
-                    """
-                    tbody.innerHTML += row
+            try:
+                response = await api_fetch("/api/products")
+                if response.ok:
+                    data = await response.json()
+                    products = data.to_py() if hasattr(data, "to_py") else data
+                    tbody = document.getElementById("products-table-body")
+                    tbody.innerHTML = ""
+                    for p in products:
+                        tr = document.createElement("tr")
+                        tr.innerHTML = f"""
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{p['img_url'] or 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{p['name']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p['price']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p['unit']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-btn" data-id="{p['product_id']}" data-name="{p['name']}" data-unit="{p['unit']}" data-price="{p['price']}" data-category="{p['category_id']}" data-img="{p['img_url']}">Edit</button>
+                                <button class="text-red-600 hover:text-red-900 delete-prod-btn" data-id="{p['product_id']}" data-name="{p['name']}">Delete</button>
+                            </td>
+                        """
+                        tbody.appendChild(tr)
+                    
+                    for btn in tbody.getElementsByClassName("edit-btn"):
+                        pid = int(btn.getAttribute("data-id"))
+                        name = btn.getAttribute("data-name")
+                        unit = btn.getAttribute("data-unit")
+                        price = float(btn.getAttribute("data-price"))
+                        cat_id = int(btn.getAttribute("data-category"))
+                        img_url = btn.getAttribute("data-img")
+                        
+                        def make_edit_handler(pid, name, unit, price, cat_id, img_url):
+                            return lambda e: populate_edit(pid, name, unit, price, cat_id, img_url)
+                        
+                        btn.addEventListener("click", create_proxy(make_edit_handler(pid, name, unit, price, cat_id, img_url)))
+
+                    for btn in tbody.getElementsByClassName("delete-prod-btn"):
+                        pid = int(btn.getAttribute("data-id"))
+                        pname = btn.getAttribute("data-name")
+                        def make_delete_handler(pid, pname):
+                            return lambda e: asyncio.ensure_future(confirm_and_delete_product(pid, pname))
+                        btn.addEventListener("click", create_proxy(make_delete_handler(pid, pname)))
+
+            except Exception as e:
+                print(f"Error loading products: {e}")
 
         async def load_reservations():
-            response = await pyfetch("/api/reservations", method="GET")
-            if response.status == 200:
-                data = await response.json()
-                tbody = js.document.getElementById("reservations_table_body")
-                tbody.innerHTML = ""
-                for r in data:
-                    items_summary = ", ".join([f"Prod ID: {i['product_id']} (x{i['quantity']})" for i in r["items"]])
-                    r_id = r["reservation_id"]
-                    row = f"""
-                    <tr>
-                        <td class="p-3 font-mono font-bold">{r_id}</td>
-                        <td class="p-3">{r["customer_name"]}</td>
-                        <td class="p-3">{r["customer_email"]}<br><span class="text-xs text-gray-500">{r["customer_phone"]}</span></td>
-                        <td class="p-3">{r["pickup_date"] or 'N/A'}</td>
-                        <td class="p-3 text-xs">{items_summary}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="window.deleteReservation('{r_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs">Delete</button>
-                        </td>
-                    </tr>
-                    """
-                    tbody.innerHTML += row
+            try:
+                response = await api_fetch("/api/reservations")
+                if response.ok:
+                    data = await response.json()
+                    reservations = data.to_py() if hasattr(data, "to_py") else data
+                    tbody = document.getElementById("reservations-table-body")
+                    tbody.innerHTML = ""
+                    for r in reservations:
+                        tr = document.createElement("tr")
+                        tr.innerHTML = f"""
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{r['reservation_id']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{r['customer_name']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{r['customer_email']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{r['pickup_date'] or 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-red-600 hover:text-red-900 delete-res-btn" data-id="{r['reservation_id']}">Delete</button>
+                            </td>
+                        """
+                        tbody.appendChild(tr)
+
+                    for btn in tbody.getElementsByClassName("delete-res-btn"):
+                        rid = btn.getAttribute("data-id")
+                        def make_delete_res_handler(rid):
+                            return lambda e: asyncio.ensure_future(delete_reservation(rid))
+                        btn.addEventListener("click", create_proxy(make_delete_res_handler(rid)))
+
+            except Exception as e:
+                print(f"Error loading reservations: {e}")
 
         async def save_product(event):
-            p_id = js.document.getElementById("product_id").value
-            name = js.document.getElementById("prod_name").value
-            unit = js.document.getElementById("prod_unit").value
-            price_val = js.document.getElementById("prod_price").value
+            clear_error()
+            pid = document.getElementById("product-id").value
+            name = document.getElementById("prod-name").value
+            unit = document.getElementById("prod-unit").value
+            price = document.getElementById("prod-price").value
+            category_id = document.getElementById("prod-category").value
+            img_url = document.getElementById("prod-img").value
 
-            if not name or not unit or not price_val:
-                js.alert("Please fill in all product fields.")
+            if not name or not unit or not price or not category_id:
+                show_error("Please fill out all required fields, including selecting a category.")
                 return
 
-            payload = {"name": name, "unit": unit, "price": int(price_val)}
-            
-            if p_id:
-                response = await pyfetch(f"/api/products/{p_id}", method="PUT", body=json.dumps(payload), headers={"Content-Type": "application/json"})
-            else:
-                response = await pyfetch("/api/products", method="POST", body=json.dumps(payload), headers={"Content-Type": "application/json"})
+            try:
+                parsed_category_id = int(category_id)
+            except ValueError:
+                show_error("Please select a valid category.")
+                return
 
-            if response.status in [200, 201]:
-                clear_product_form(None)
+            payload = {
+                "name": name,
+                "unit": unit,
+                "price": float(price),
+                "category_id": parsed_category_id,
+                "img_url": img_url
+            }
+
+            if pid:
+                response = await api_fetch(f"/api/products/{pid}", method="PUT", body=payload)
+            else:
+                response = await api_fetch("/api/products", method="POST", body=payload)
+
+            if response.ok:
+                reset_product_form()
                 await load_products()
             else:
-                res_json = await response.json()
-                js.alert(f"Error: {res_json.get('error', 'Unknown error')}")
+                err_data = await response.json()
+                show_error(f"Failed to save product: {err_data}")
 
-        def clear_product_form(event):
-            js.document.getElementById("product_id").value = ""
-            js.document.getElementById("prod_name").value = ""
-            js.document.getElementById("prod_unit").value = ""
-            js.document.getElementById("prod_price").value = ""
-
-        def logout(event):
-            js.window.location.href = "/logout"
-
-        async def js_delete_product(p_id):
-            if js.confirm("Are you sure you want to delete this product?"):
-                response = await pyfetch(f"/api/products/{p_id}", method="DELETE")
-                if response.status == 200:
+        async def confirm_and_delete_product(pid, pname):
+            if js.window.confirm(f"Are you sure you want to delete product '{pname}'?"):
+                response = await api_fetch(f"/api/products/{pid}", method="DELETE")
+                if response.ok:
                     await load_products()
-                else:
-                    js.alert("Failed to delete product.")
 
-        async def js_delete_reservation(r_id):
-            if js.confirm("Are you sure you want to delete this reservation?"):
-                response = await pyfetch(f"/api/reservations/{r_id}", method="DELETE")
-                if response.status == 200:
+        async def delete_reservation(rid):
+            if js.window.confirm("Are you sure you want to delete this reservation?"):
+                response = await api_fetch(f"/api/reservations/{rid}", method="DELETE")
+                if response.ok:
                     await load_reservations()
-                else:
-                    js.alert("Failed to delete reservation.")
 
-        def js_edit_product(p_id, name, unit, price):
-            js.document.getElementById("product_id").value = p_id
-            js.document.getElementById("prod_name").value = name
-            js.document.getElementById("prod_unit").value = unit
-            js.document.getElementById("prod_price").value = price
+        def populate_edit(pid, name, unit, price, category_id, img_url):
+            document.getElementById("product-id").value = str(pid)
+            document.getElementById("prod-name").value = name
+            document.getElementById("prod-unit").value = unit
+            document.getElementById("prod-price").value = str(price)
+            document.getElementById("prod-category").value = str(category_id)
+            document.getElementById("prod-img").value = img_url
+            document.getElementById("product-form-title").innerText = f"Edit {name}"
+            document.getElementById("cancel-edit-btn").classList.remove("hidden")
 
-        js.window.deleteProduct = lambda p_id: js.pyodide.runPython(f"js_delete_product({p_id})") if hasattr(js, 'pyodide') else None
-        js.window.deleteReservation = lambda r_id: None
-        js.window.editProduct = lambda p_id, name, unit, price: js_edit_product(p_id, name, unit, price)
+        def reset_product_form(event=None):
+            if event is not None:
+                event.preventDefault()
+            document.getElementById("product-id").value = ""
+            document.getElementById("prod-name").value = ""
+            document.getElementById("prod-unit").value = ""
+            document.getElementById("prod-price").value = ""
+            document.getElementById("prod-category").value = ""
+            document.getElementById("prod-img").value = ""
+            document.getElementById("product-form-title").innerText = "Add New Product"
+            document.getElementById("cancel-edit-btn").classList.add("hidden")
+            clear_error()
 
-        # Main initialization sequence runner function exposed globally
-        async def init_admin():
-            await check_admin_auth()
+        document.getElementById("save-product-btn").addEventListener("click", create_proxy(lambda e: asyncio.ensure_future(save_product(e))))
+        document.getElementById("cancel-edit-btn").addEventListener("click", create_proxy(reset_product_form))
+
+        async def init():
+            await load_categories()
             await load_products()
             await load_reservations()
 
-        js.window.initAdmin = init_admin
-    </script>
-
-    <!-- Safe JS Loader -->
-    <script>
-        window.addEventListener("DOMContentLoaded", () => {
-            setTimeout(() => {
-                if (window.initAdmin) {
-                    window.initAdmin();
-                }
-            }, 600);
-        });
+        asyncio.ensure_future(init())
     </script>
 </body>
 </html>

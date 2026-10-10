@@ -15,6 +15,8 @@ def get_products():
         "product_id": p.product_id,
         "name": p.name,
         "unit": p.unit,
+        "category_id": p.category_id,
+        "img_url": p.img_url,
         "price": p.price
         } for p in products]
     return jsonify(result), 200
@@ -28,6 +30,8 @@ def get_product(product_id):
         "product_id": product.product_id,
         "name": product.name,
         "unit": product.unit,
+        "img_url": product.img_url,
+        "category_id": product.category_id,
         "price": product.price
         }), 200
 
@@ -37,13 +41,15 @@ def get_product(product_id):
 def create_product():
     """Create a new product (Admin only)."""
     data = request.get_json()
-    if not data or not all(k in data for k in ("name", "unit", "price")):
+    if not data or not all(k in data for k in ("name", "unit", "price", "img_url", "category_id")):
         return jsonify({"error": "Missing required fields (name, unit, price)"}), 400
 
     new_product = Product(
             name=data["name"],
             unit=data["unit"],
-            price=data["price"]
+            price=data["price"],
+            category_id=data["category_id"],
+            img_url=data["img_url"]
             )
     db.session.add(new_product)
     db.session.commit()
@@ -67,6 +73,8 @@ def update_product(product_id):
     product.name = data.get("name", product.name)
     product.unit = data.get("unit", product.unit)
     product.price = data.get("price", product.price)
+    product.category_id = data.get("category_id", product.category_id)
+    product.img_url = data.get("img_url", product.img_url)
 
     db.session.commit()
     return jsonify({"message": "Product updated successfully"}), 200

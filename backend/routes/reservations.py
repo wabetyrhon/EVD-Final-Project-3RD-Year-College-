@@ -99,9 +99,8 @@ def create_reservation():
 
 
 @reservations_bp.route("/api/reservations/<string:reservation_id>", methods=["PUT", "PATCH"])
-@admin_required
 def update_reservation(reservation_id):
-    """Update a reservation (Admin only)."""
+    """Update a reservation (Accessible to anyone)."""
     res = Reservation.query.get_or_404(reservation_id)
     data = request.get_json()
 

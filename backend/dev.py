@@ -5,7 +5,7 @@ from flask import jsonify, request
 from sqlalchemy import text
 
 from backend import app, db
-from backend.models import Reservation, ReservationItem, Product
+from backend.models import Reservation, ReservationItem, Product, Category
 
 def reset_database():
     with app.app_context():
@@ -25,10 +25,14 @@ def reset_database():
 
             print("Creating new table schemas...")
             db.metadata.create_all(bind=conn)
+            conn.commit()
+
             print("Adding default rows...")
+            categories = ["Pork", "Chicken", "Hotdogs & Sausages", "Beef", "Fish"]
+            db.session.add_all([Category(name=category) for category in categories])
+            db.session.commit()
 
             print("Database ready!")
-            conn.commit()
             return True
 
 
