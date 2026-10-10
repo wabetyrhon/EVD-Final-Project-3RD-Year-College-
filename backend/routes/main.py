@@ -2,6 +2,7 @@ from flask import Blueprint, abort, request, session, redirect
 from werkzeug.security import check_password_hash
 
 from backend import app, db, ADMIN_HASH
+from backend.utils import admin_required
 
 
 main_bp = Blueprint("main", __name__)
@@ -15,7 +16,11 @@ def homepage():
 def admin_dashboard():
     if not session.get("is_admin", False):
         return redirect("/login")
-    return "You are an admin!"
+    return app.send_static_file("admin.html")
+
+@main_bp.route("/customer")
+def customer_page():
+    return app.send_static_file("customer.html")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -37,3 +42,4 @@ def login():
 def logout():
     session.pop('is_admin', None)
     return redirect('/')
+

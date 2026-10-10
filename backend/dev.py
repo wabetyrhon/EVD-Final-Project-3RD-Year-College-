@@ -5,26 +5,31 @@ from flask import jsonify, request
 from sqlalchemy import text
 
 from backend import app, db
-from backend.models import Reservation, Item
+from backend.models import Reservation, ReservationItem, Product
 
 def reset_database():
     with app.app_context():
-        print("Testing database connection...")
-        try:
-            db.session.execute(text("SELECT 1"))
-            print("Database connection successful!")
-        except Exception as e:
-            print(f"Database connection failed: {e}")
-            return False
+        with db.engine.connect() as conn:
+            print("Testing database connection...")
+            try:
+                conn.execute(text("SELECT 1"))
+                print("Database connection successful!")
+            except Exception as e:
+                print(f"Database connection failed: {e}")
+                return False
+            print("Dropping all existing tables...")
 
-        print("Dropping all existing tables...")
-        db.drop_all()
-        print("Creating new table schemas...")
-        db.create_all()
-        print("Adding default rows...")
+            conn.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+            db.metadata.drop_all(bind=conn)
+            conn.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
 
-        print("Database ready!")
-        return True
+            print("Creating new table schemas...")
+            db.metadata.create_all(bind=conn)
+            print("Adding default rows...")
+
+            print("Database ready!")
+            conn.commit()
+            return True
 
 
 @app.route("/dev/resetdb", methods=["POST"])

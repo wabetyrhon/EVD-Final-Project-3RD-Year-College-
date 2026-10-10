@@ -12,12 +12,24 @@ class Reservation(db.Model):
     pickup_date = db.Column(db.Date)
     created_at = db.Column(db.DateTime(), default=datetime.now)
 
-    items = db.relationship("Item", back_populates="reservation")
+    items = db.relationship("ReservationItem", back_populates="reservation")
 
-class Item(db.Model):
+class ReservationItem(db.Model):
     item_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
+
     reservation_id = db.Column(db.String(8), db.ForeignKey("reservation.reservation_id"), nullable=False)
     reservation = db.relationship("Reservation", back_populates="items")
+
+    product_id = db.Column(db.Integer, db.ForeignKey("product.product_id"), nullable=False)
+    product = db.relationship("Product", back_populates="reservation_items")
+
+    quantity = db.Column(db.Integer, nullable=False)
+
+class Product(db.Model):
+    product_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    unit = db.Column(db.String(20), nullable=False)
+    price = db.Column(db.Integer, nullable=False)
+
+    reservation_items = db.relationship("ReservationItem", back_populates="product")
 

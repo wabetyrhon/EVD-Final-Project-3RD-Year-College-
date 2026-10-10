@@ -1,3 +1,4 @@
+from functools import wraps
 import secrets
 import string
 
@@ -10,7 +11,16 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 from functools import wraps
-from flask import jsonify
+from flask import jsonify, session
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("is_admin", False):
+            return jsonify({"error": "Unauthorized. Admin access required."}), 403
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 def generate_random_id():

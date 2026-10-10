@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal - Reservations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen py-10">
+
+    <div class="max-w-4xl mx-auto px-4 space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-800">Product Reservations</h1>
+            <p class="text-gray-600 mt-1">Book items or check your existing reservation status.</p>
+        </div>
+
+        <!-- Tracking Section -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-3 text-gray-700">Track Reservation</h2>
+            <div class="flex gap-2">
+                <input type="text" id="track_id" placeholder="Enter 8-digit Reservation ID" class="border p-2 rounded flex-grow text-sm uppercase">
+                <button py-click="track_reservation" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded text-sm">Check Status</button>
+            </div>
+            <div id="tracking_result" class="mt-4 text-sm"></div>
+        </div>
+
+        <!-- Create Reservation Section -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Make a New Reservation</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
+                    <input type="text" id="cust_name" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Email Address</label>
+                    <input type="email" id="cust_email" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Phone Number</label>
+                    <input type="text" id="cust_phone" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Pickup Date</label>
+                    <input type="date" id="cust_pickup" class="w-full border p-2 rounded text-sm">
+                </div>
+            </div>
+
+            <!-- Product Selection Controls -->
+            <div class="border-t pt-4 mt-6">
+                <h3 class="font-medium text-gray-700 mb-2">Add Items to Order</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Select Product</label>
+                        <select id="product_dropdown" class="w-full border p-2 rounded text-sm bg-white">
+                            <option value="">-- Choose a product --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
+                        <input type="number" id="item_quantity" min="1" value="1" class="w-full border p-2 rounded text-sm">
+                    </div>
+                </div>
+                <button py-click="add_item_to_list" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">Add to Selection</button>
+            </div>
+
+            <!-- Current Order List Table -->
+            <div class="mt-6">
+                <h3 class="font-medium text-gray-700 mb-2">Selected Products List</h3>
+                <div class="overflow-x-auto border rounded">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-gray-100 border-b text-gray-600">
+                                <th class="p-2.5">Product</th>
+                                <th class="p-2.5">Unit Price</th>
+                                <th class="p-2.5">Quantity</th>
+                                <th class="p-2.5">Subtotal</th>
+                                <th class="p-2.5 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="selected_items_tbody" class="divide-y">
+                            <tr>
+                                <td colspan="5" class="p-4 text-center text-gray-400">No products added yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Total Price Display -->
+                <div class="flex justify-end items-center mt-3 text-lg font-bold text-gray-800">
+                    Total: <span id="order_total_display" class="ml-2 text-green-600">0</span>
+                </div>
+            </div>
+
+            <button py-click="submit_reservation" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white p-3 rounded font-medium text-sm">Submit Reservation</button>
+        </div>
+    </div>
+
+    <!-- PyScript Logic -->
+    <script type="py">
+        import js
+        import json
+        from pyodide.http import pyfetch
+
+        # Global store for products reference dictionary & current order cart list
+        products_cache = {}
+        current_cart = []
+
+        async def load_client_products():
+            global products_cache
+            response = await pyfetch("/api/products", method="GET")
+            if response.status == 200:
+                data = await response.json()
+                dropdown = js.document.getElementById("product_dropdown")
+                dropdown.innerHTML = '<option value="">-- Choose a product --</option>'
+                
+                for p in data:
+                    p_id = str(p["product_id"])
+                    products_cache[p_id] = p
+                    opt = js.document.createElement("option")
+                    opt.value = p_id
+                    opt.textContent = f"{p['name']} ({p['unit']}) - {p['price']} pesos"
+                    dropdown.appendChild(opt)
+
+        def add_item_to_list(event):
+            dropdown = js.document.getElementById("product_dropdown")
+            p_id = dropdown.value
+            qty_input = js.document.getElementById("item_quantity")
+            
+            if not p_id:
+                js.alert("Please select a valid product.")
+                return
+            
+            try:
+                qty = int(qty_input.value)
+                if qty <= 0:
+                    raise ValueError()
+            except ValueError:
+                js.alert("Please enter a valid positive quantity.")
+                return
+
+            product_info = products_cache[p_id]
+            
+            # Check if item is already in cart, update quantity if so
+            found = False
+            for item in current_cart:
+                if item["product_id"] == int(p_id):
+                    item["quantity"] += qty
+                    found = True
+                    break
+            
+            if not found:
+                current_cart.append({
+                    "product_id": int(p_id),
+                    "name": product_info["name"],
+                    "unit": product_info["unit"],
+                    "price": product_info["price"],
+                    "quantity": qty
+                })
+
+            render_cart()
+
+        def remove_item(index):
+            global current_cart
+            if 0 <= index < len(current_cart):
+                current_cart.pop(index)
+                render_cart()
+
+        def render_cart():
+            tbody = js.document.getElementById("selected_items_tbody")
+            tbody.innerHTML = ""
+            
+            if not current_cart:
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">No products added yet.</td></tr>'
+                js.document.getElementById("order_total_display").textContent = "0"
+                return
+
+            total_price = 0
+            for idx, item in enumerate(current_cart):
+                subtotal = item["price"] * item["quantity"]
+                total_price += subtotal
+                
+                row = f"""
+                <tr>
+                    <td class="p-2.5">{item["name"]}</td>
+                    <td class="p-2.5">{item["price"]}</td>
+                    <td class="p-2.5">{item["quantity"]}</td>
+                    <td class="p-2.5 font-medium">{subtotal}</td>
+                    <td class="p-2.5 text-right">
+                        <button onclick="window.removeCartItem({idx})" class="bg-red-500 text-white px-2 py-1 rounded text-xs">Remove</button>
+                    </td>
+                </tr>
+                """
+                tbody.innerHTML += row
+            
+            js.document.getElementById("order_total_display").textContent = str(total_price)
+
+        async def submit_reservation(event):
+            if not current_cart:
+                js.alert("Please add at least one product item to your reservation list before submitting.")
+                return
+
+            name = js.document.getElementById("cust_name").value
+            email = js.document.getElementById("cust_email").value
+            phone = js.document.getElementById("cust_phone").value
+            pickup = js.document.getElementById("cust_pickup").value
+
+            if not name or not email or not phone:
+                js.alert("Please fill in all customer contact details (Name, Email, Phone).")
+                return
+
+            # Confirmation dialog before sending request
+            confirmed = js.confirm("Are you sure you want to finalize and submit this reservation?")
+            if not confirmed:
+                return
+
+            # Map cart items down to clean structure expected by backend API specs
+            items_payload = [{"product_id": i["product_id"], "quantity": i["quantity"]} for i in current_cart]
+
+            payload = {
+                "customer_name": name,
+                "customer_email": email,
+                "customer_phone": phone,
+                "pickup_date": pickup if pickup else None,
+                "items": items_payload
+            }
+
+            response = await pyfetch("/api/reservations", method="POST", body=json.dumps(payload), headers={"Content-Type": "application/json"})
+            res_data = await response.json()
+
+            if response.status == 201:
+                js.alert(f"Reservation successful! Your Reservation ID is: {res_data['reservation_id']}")
+                js.window.location.reload()
+            else:
+                js.alert(f"Error: {res_data.get('error', 'Failed to create reservation')}")
+
+        async def track_reservation(event):
+            r_id = js.document.getElementById("track_id").value.strip()
+            result_div = js.document.getElementById("tracking_result")
+            
+            if not r_id:
+                result_div.innerHTML = "<span class='text-red-500'>Please enter a reservation ID.</span>"
+                return
+
+            response = await pyfetch(f"/api/reservations/{r_id}", method="GET")
+            if response.status == 200:
+                r = await response.json()
+                items_text = "<br>".join([f"- Product ID {i['product_id']}: Quantity {i['quantity']}" for i in r["items"]])
+                result_div.innerHTML = f"""
+                <div class="bg-green-50 border border-green-200 p-4 rounded text-green-800">
+                    <p><strong>Status:</strong> Found ✅</p>
+                    <p><strong>Customer Name:</strong> {r["customer_name"]}</p>
+                    <p><strong>Pickup Date:</strong> {r["pickup_date"] or 'Not specified'}</p>
+                    <p class="mt-2 font-medium">Reserved Items:</p>
+                    <div class="text-xs">{items_text}</div>
+                </div>
+                """
+            else:
+                result_div.innerHTML = "<span class='text-red-500'>Reservation not found. Please check your ID.</span>"
+
+        # Expose cart removal function back to the global JS window space
+        js.window.removeCartItem = lambda idx: remove_item(idx)
+
+        # Initial trigger to populate dropdown
+        async def init_portal():
+            await load_client_products()
+
+        js.window.initPortal = init_portal
+    </script>
+
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => {
+                if (window.initPortal) {
+                    window.initPortal();
+                }
+            }, 600);
+        });
+    </script>
+</body>
+</html>

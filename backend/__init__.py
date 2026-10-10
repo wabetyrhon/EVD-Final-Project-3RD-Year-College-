@@ -26,5 +26,9 @@ ADMIN_HASH = getenv("ADMIN_HASH")
 
 from backend import dev
 from backend.routes.main import main_bp
+from backend.routes.reservations import reservations_bp
+from backend.routes.products import products_bp
 
 app.register_blueprint(main_bp)
+app.register_blueprint(reservations_bp)
+app.register_blueprint(products_bp)
