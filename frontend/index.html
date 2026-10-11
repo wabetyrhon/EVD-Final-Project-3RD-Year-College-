@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laortealbe Meat Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Gelasio:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://pyscript.net/releases/2025.8.1/core.css">
+  <script type="module" src="https://pyscript.net/releases/2025.8.1/core.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <a href="#home" class="brand">
+    <img src="assets/logo.png" alt="" onerror="this.style.display='none'">
+    <span>LAORTEALBE <small>MEAT<br>SHOP</small></span>
+  </a>
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#about">About</a>
+    <a href="#products">Products</a>
+  </nav>
+</header>
+
+<section id="home" class="hero">
+  <video autoplay muted loop playsinline poster="assets/hero-poster.jpg">
+    <source src="assets/promo.mp4" type="video/mp4">
+  </video>
+  <div class="hero-text">
+    <h1>Fresh frozen cuts, reserved in minutes.</h1>
+    <p>No account needed. Reserve online, get your RTN, pick up at the shop.</p>
+    <a class="btn" href="#products">Browse products</a>
+  </div>
+</section>
+
+<section class="college">
+  <p>Cebu Eastern College, Inc.</p>
+  <h2>College of Information Technology</h2>
+</section>
+
+<main>
+  <section id="about">
+    <h2 class="title">About us</h2>
+    <p>Laortealbe Meat Shop sells frozen pork, chicken and tuna to households and small eateries in Cebu. Replace this paragraph with your group's business concept: who you serve, where you source your meat, and how pickup works.</p>
+  </section>
+
+  <section id="products">
+    <h2 class="title">Check out our products!</h2>
+    <div id="product-grid" class="grid"></div>
+  </section>
+
+  <section id="reserve">
+    <h2 class="title">Your reservation</h2>
+    <div class="two-col">
+      <div class="panel">
+        <h3>Items</h3>
+        <div id="cart-items"><p class="muted">Nothing here yet. Add a product above.</p></div>
+        <p class="total">Total: <span id="cart-total">₱0.00</span></p>
+      </div>
+      <div class="panel">
+        <h3>Your details</h3>
+        <label for="cust-name">Full name</label>
+        <input id="cust-name" type="text" autocomplete="name">
+        <label for="cust-contact">Mobile number</label>
+        <input id="cust-contact" type="tel" autocomplete="tel">
+        <label for="cust-date">Pickup date</label>
+        <input id="cust-date" type="date">
+        <button id="reserve-btn" class="btn" type="button">Reserve now</button>
+        <p id="reserve-msg" class="msg" role="status"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="track">
+    <h2 class="title">Track your RTN</h2>
+    <div class="panel narrow">
+      <label for="track-input">Enter your reservation tracking number (RTN)</label>
+      <div class="row">
+        <input id="track-input" type="text" placeholder="LMS-XXXXXX">
+        <button id="track-btn" class="btn" type="button">Check status</button>
+      </div>
+      <div id="track-result" role="status"></div>
+    </div>
+  </section>
+
+  <section id="owner">
+    <h2 class="title">Owner panel</h2>
+    <div class="panel">
+      <div id="owner-login" class="row">
+        <input id="owner-pin" type="password" placeholder="Owner PIN" aria-label="Owner PIN">
+        <button id="owner-btn" class="btn" type="button">Unlock</button>
+      </div>
+      <p id="owner-msg" class="msg" role="status"></p>
+      <div id="owner-list"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>© Laortealbe.com, a Meatshop Philippine brand</p>
+  <p>FAQ · Privacy Policy · Terms and Conditions</p>
+</footer>
+
+<script type="mpy" src="./main.py"></script>
+</body>
+</html>
