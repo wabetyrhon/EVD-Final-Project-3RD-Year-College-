@@ -234,10 +234,14 @@ def on_product(event):
             actions = '<p class="muted">Price coming soon. This item cannot be reserved yet.</p>'
         else:
             actions = (
-                '<div class="dlg-actions"><div><label for="dlg-qty">Quantity</label>'
-                '<input id="dlg-qty" type="number" min="1" step="1" value="1"></div>'
+                '<div class="dlg-buy"><label for="dlg-qty">Quantity</label>'
+                '<div class="stepper"><button class="btn ghost" data-step="-1" aria-label="Less">-</button>'
+                '<input id="dlg-qty" type="number" min="1" step="1" value="1" data-price="%s">'
+                '<button class="btn ghost" data-step="1" aria-label="More">+</button></div>'
+                '<p class="dlg-total">Total <strong id="dlg-total">%s</strong>'
+                '<span id="dlg-calc" class="muted">1 x %s</span></p>'
                 '<button class="btn" data-add-dlg="%s">Add to reservation</button></div>'
-            ) % p["id"]
+            ) % (p["price"], peso(p["price"]), peso(p["price"]), p["id"])
         dlg.innerHTML = (
             '<div class="dlg-head"><h3>%s</h3><button class="x" data-close="product-dialog" aria-label="Close">&times;</button></div>'
             '<div class="dlg-body">%s<dl><dt>Price</dt><dd>%s</dd><dt>Sold as</dt><dd>%s</dd>'
@@ -253,6 +257,12 @@ def on_dialog(event):
     if t.closest("[data-close]"):
         q("#product-dialog").close()
         return
+    step = t.closest("[data-step]")
+    if step:
+        qty = int(float(q("#dlg-qty").value or 0)) + int(step.getAttribute("data-step"))
+        q("#dlg-qty").value = str(max(1, qty))
+        update_total()
+        return
     btn = t.closest("[data-add-dlg]")
     if btn:
         qty = int(float(q("#dlg-qty").value or 0))
@@ -261,6 +271,20 @@ def on_dialog(event):
             return
         add_to_cart(btn.getAttribute("data-add-dlg"), qty)
         q("#product-dialog").close()
+
+
+def update_total():
+    box = q("#dlg-qty")
+    qty = max(0, int(float(box.value or 0)))
+    price = float(box.getAttribute("data-price"))
+    q("#dlg-total").innerText = peso(price * qty)
+    q("#dlg-calc").innerText = "%d x %s" % (qty, peso(price))
+
+
+@when("input", "#product-dialog")
+def on_qty_typed(event):
+    if event.target.id == "dlg-qty":
+        update_total()
 
 
 @when("click", "#owner-dialog")
