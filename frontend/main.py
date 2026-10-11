@@ -11,25 +11,38 @@ from pyscript.ffi import create_proxy
 CATEGORIES = [
     {"id": "pork", "name": "Pork"},
     {"id": "chicken", "name": "Chicken"},
-    {"id": "tuna", "name": "Tuna"},
+    {"id": "sausage", "name": "Hotdogs & Sausages"},
+    {"id": "beef", "name": "Beef"},
+    {"id": "fish", "name": "Fish"},
 ]
-# Placeholder products: edit names, prices and details. Photos: assets/products/<id>.jpg
+# Products from the price list. price None = not priced yet. Photos: assets/products/<id>.jpg
 PRODUCTS = [
-    {"id": "pork-belly", "cat": "pork", "name": "Pork Belly", "price": 320, "desc": "Skin-on slab, good for liempo and lechon kawali.", "pack": "Vacuum-packed, about 1 kg", "stock": "In stock"},
-    {"id": "pork-chop", "cat": "pork", "name": "Pork Chop", "price": 290, "desc": "Bone-in cuts for frying or grilling.", "pack": "Vacuum-packed, about 1 kg", "stock": "In stock"},
-    {"id": "ground-pork", "cat": "pork", "name": "Ground Pork", "price": 260, "desc": "Fine grind for embutido and meatballs.", "pack": "Bagged, 500 g or 1 kg", "stock": "In stock"},
-    {"id": "whole-chicken", "cat": "chicken", "name": "Whole Chicken", "price": 210, "desc": "Cleaned whole dressed chicken.", "pack": "Bagged, about 1.2 kg each", "stock": "In stock"},
-    {"id": "chicken-breast", "cat": "chicken", "name": "Chicken Breast", "price": 240, "desc": "Skinless, boneless breast fillet.", "pack": "Bagged, 1 kg", "stock": "In stock"},
-    {"id": "chicken-wings", "cat": "chicken", "name": "Chicken Wings", "price": 230, "desc": "Party wings, cut and cleaned.", "pack": "Bagged, 1 kg", "stock": "In stock"},
-    {"id": "tuna-steak", "cat": "tuna", "name": "Tuna Steak", "price": 380, "desc": "Thick-cut steaks for grilling or searing.", "pack": "Vacuum-packed, about 1 kg", "stock": "In stock"},
-    {"id": "tuna-belly", "cat": "tuna", "name": "Tuna Belly", "price": 420, "desc": "Fatty belly cut, great grilled.", "pack": "Vacuum-packed, about 1 kg", "stock": "In stock"},
-    {"id": "tuna-cubes", "cat": "tuna", "name": "Tuna Cubes", "price": 350, "desc": "Pre-cut cubes for kinilaw and skewers.", "pack": "Bagged, 500 g or 1 kg", "stock": "In stock"},
+    {"id": "pata-1-kg", "cat": "pork", "name": "Pata", "unit": "1 kg", "price": 250},
+    {"id": "giniling-1-kg", "cat": "pork", "name": "Giniling", "unit": "1 kg", "price": 290},
+    {"id": "kasim-menudo-cut-1-kg", "cat": "pork", "name": "Kasim (Menudo Cut)", "unit": "1 kg", "price": 290},
+    {"id": "porkchop-1-kg", "cat": "pork", "name": "Porkchop", "unit": "1 kg", "price": 290},
+    {"id": "liempo-1-kg", "cat": "pork", "name": "Liempo", "unit": "1 kg", "price": 330},
+    {"id": "humba-cut-1-kg", "cat": "pork", "name": "Humba Cut", "unit": "1 kg", "price": 330},
+    {"id": "square-cooked-ham-225-g", "cat": "pork", "name": "Square Cooked Ham", "unit": "225 g", "price": 68},
+    {"id": "bacon-regular-200-g", "cat": "pork", "name": "Bacon Regular", "unit": "200 g", "price": 105},
+    {"id": "chicken-breast-1-kg", "cat": "chicken", "name": "Chicken Breast", "unit": "1 kg", "price": 290},
+    {"id": "chicken-whole-1-whole", "cat": "chicken", "name": "Chicken Whole", "unit": "1 whole", "price": 185},
+    {"id": "chicken-hotdog-250-g", "cat": "sausage", "name": "Chicken Hotdog", "unit": "250 g", "price": 52},
+    {"id": "champ-hotdog-jumbo-250-g", "cat": "sausage", "name": "Champ Hotdog Jumbo", "unit": "250 g", "price": 45},
+    {"id": "champ-hotdog-jumbo-1-kg", "cat": "sausage", "name": "Champ Hotdog Jumbo", "unit": "1 kg", "price": 160},
+    {"id": "prem-hotdog-jumbo-240-g", "cat": "sausage", "name": "Prem Hotdog Jumbo", "unit": "240 g", "price": 67},
+    {"id": "prem-hotdog-jumbo-500-g", "cat": "sausage", "name": "Prem Hotdog Jumbo", "unit": "500 g", "price": 139},
+    {"id": "prem-hotdog-regular-jumbo-1-kg", "cat": "sausage", "name": "Prem Hotdog Regular/Jumbo", "unit": "1 kg", "price": 215},
+    {"id": "chorizo-pinoy-200-g", "cat": "sausage", "name": "Chorizo Pinoy", "unit": "200 g", "price": 70},
+    {"id": "longaniza-hamonada-225-g", "cat": "sausage", "name": "Longaniza Hamonada", "unit": "225 g", "price": 80},
+    {"id": "hamburger-patties-225-g", "cat": "beef", "name": "Hamburger Patties", "unit": "225 g", "price": 85},
+    {"id": "tuna-panga-1-kg", "cat": "fish", "name": "Tuna Panga", "unit": "1 kg", "price": None},
 ]
 OWNER_PIN = "owner123"  # demo only - change it
-KEY = "laortealbe_reservations"
+KEY = "laortealbe_reservations_v2"
 CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
-cart = {}  # product id -> kilos
+cart = {}  # product id -> quantity (packs)
 owner_unlocked = False
 
 
@@ -44,6 +57,22 @@ def peso(n):
 
 def kg_text(kg):
     return str(int(kg)) if kg == int(kg) else str(kg)
+
+
+def label(p):
+    return "%s (%s)" % (p["name"], p["unit"])
+
+
+def price_text(p):
+    if p["price"] is None:
+        return "Price coming soon"
+    return "%s / %s" % (peso(p["price"]), p["unit"])
+
+
+def add_btn(p):
+    if p["price"] is None:
+        return '<button class="btn small" disabled>Unavailable</button>'
+    return '<button class="btn small" data-add="%s">Add</button>' % p["id"]
 
 
 def esc(s):
@@ -94,7 +123,7 @@ def badge(status):
 
 
 def items_text(items):
-    return ", ".join("%s %s kg" % (i["name"], kg_text(i["kg"])) for i in items)
+    return ", ".join("%s x%d (%s)" % (i["name"], i["qty"], i["unit"]) for i in items)
 
 
 def set_error(field, text):
@@ -120,10 +149,9 @@ def show_category(cid):
         html += (
             '<article class="pcard"><button class="pcard-main" data-open="%s" aria-label="View details for %s">'
             "%s<h3>%s</h3></button>"
-            '<div class="meta"><span class="price">%s / kg</span>'
-            '<button class="btn small" data-add="%s">Add</button></div></article>'
+            '<div class="meta"><span class="price">%s</span>%s</div></article>'
         ) % (p["id"], p["name"], photo("assets/products/%s.jpg" % p["id"], "Product photo"),
-             p["name"], peso(p["price"]), p["id"])
+             p["name"], price_text(p), add_btn(p))
     q("#product-grid").innerHTML = html
     q("#product-title").innerText = name
     q("#category-view").classList.add("hidden")
@@ -142,10 +170,10 @@ def render_cart():
             html += (
                 '<div class="cart-line"><span>%s</span><span class="qty">'
                 '<button class="btn small" data-act="minus" data-id="%s" aria-label="Less %s">-</button>'
-                "<span>%s kg</span>"
+                "<span>%s</span>"
                 '<button class="btn small" data-act="plus" data-id="%s" aria-label="More %s">+</button>'
                 '</span><span>%s</span><button class="link" data-act="remove" data-id="%s">Remove</button></div>'
-            ) % (p["name"], pid, p["name"], kg_text(kg), pid, p["name"], peso(p["price"] * kg), pid)
+            ) % (label(p), pid, p["name"], kg, pid, p["name"], peso(p["price"] * kg), pid)
         box.innerHTML = html
     q("#cart-total").innerText = peso(cart_total())
     q("#cart-count").innerText = str(len(cart))
@@ -187,10 +215,10 @@ def on_back(event):
     q("#products").scrollIntoView()
 
 
-def add_to_cart(pid, kg):
-    cart[pid] = cart.get(pid, 0) + kg
+def add_to_cart(pid, qty):
+    cart[pid] = cart.get(pid, 0) + qty
     render_cart()
-    toast("Added %s kg %s to your reservation" % (kg_text(kg), product(pid)["name"]))
+    toast("Added %s to your reservation" % label(product(pid)))
 
 
 @when("click", "#product-grid")
@@ -202,15 +230,20 @@ def on_product(event):
     elif opn:
         p = product(opn.getAttribute("data-open"))
         dlg = q("#product-dialog")
+        if p["price"] is None:
+            actions = '<p class="muted">Price coming soon. This item cannot be reserved yet.</p>'
+        else:
+            actions = (
+                '<div class="dlg-actions"><div><label for="dlg-qty">Quantity</label>'
+                '<input id="dlg-qty" type="number" min="1" step="1" value="1"></div>'
+                '<button class="btn" data-add-dlg="%s">Add to reservation</button></div>'
+            ) % p["id"]
         dlg.innerHTML = (
             '<div class="dlg-head"><h3>%s</h3><button class="x" data-close="product-dialog" aria-label="Close">&times;</button></div>'
-            '<div class="dlg-body">%s<p>%s</p><dl><dt>Price</dt><dd>%s per kg</dd><dt>Pack</dt><dd>%s</dd>'
-            "<dt>Availability</dt><dd>%s</dd><dt>Storage</dt><dd>Keep frozen at -18°C or colder</dd></dl></div>"
-            '<div class="dlg-actions"><div><label for="dlg-kg">Kilos</label>'
-            '<input id="dlg-kg" type="number" min="0.5" step="0.5" value="1"></div>'
-            '<button class="btn" data-add-dlg="%s">Add to reservation</button></div>'
-        ) % (p["name"], photo("assets/products/%s.jpg" % p["id"], "Product photo"), p["desc"],
-             peso(p["price"]), p["pack"], p["stock"], p["id"])
+            '<div class="dlg-body">%s<dl><dt>Price</dt><dd>%s</dd><dt>Sold as</dt><dd>%s</dd>'
+            "<dt>Storage</dt><dd>Keep frozen at -18°C or colder</dd></dl></div>%s"
+        ) % (p["name"], photo("assets/products/%s.jpg" % p["id"], "Product photo"),
+             price_text(p), p["unit"], actions)
         dlg.showModal()
 
 
@@ -222,11 +255,11 @@ def on_dialog(event):
         return
     btn = t.closest("[data-add-dlg]")
     if btn:
-        kg = float(q("#dlg-kg").value or 0)
-        if kg < 0.5:
-            toast("Enter at least 0.5 kg")
+        qty = int(float(q("#dlg-qty").value or 0))
+        if qty < 1:
+            toast("Enter a quantity of at least 1")
             return
-        add_to_cart(btn.getAttribute("data-add-dlg"), kg)
+        add_to_cart(btn.getAttribute("data-add-dlg"), qty)
         q("#product-dialog").close()
 
 
@@ -244,9 +277,9 @@ def on_cart_change(event):
         return
     pid, act = btn.getAttribute("data-id"), btn.getAttribute("data-act")
     if act == "plus":
-        cart[pid] += 0.5
+        cart[pid] += 1
     elif act == "minus":
-        cart[pid] -= 0.5
+        cart[pid] -= 1
     if act == "remove" or cart[pid] <= 0:
         del cart[pid]
     render_cart()
@@ -270,7 +303,7 @@ def on_reserve(event):
         return
     orders = load_orders()
     rtn = new_rtn(orders)
-    items = [{"name": product(pid)["name"], "kg": kg} for pid, kg in cart.items()]
+    items = [{"name": product(pid)["name"], "unit": product(pid)["unit"], "qty": qty} for pid, qty in cart.items()]
     orders.append({
         "rtn": rtn, "name": name, "contact": contact, "date": date,
         "items": items, "total": cart_total(), "status": "Pending",
