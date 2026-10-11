@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import Blueprint, jsonify, request, session
 from backend import db
-from backend.utils import admin_required
+from backend.utils import admin_required, send_email
 from backend.models import Product, Reservation, ReservationItem
 
 
@@ -92,10 +92,21 @@ def create_reservation():
         db.session.add(res_item)
 
     db.session.commit()
-    return jsonify({
-        "message": "Reservation created successfully",
-        "reservation_id": new_reservation.reservation_id
-        }), 201
+
+    text_content = f"Your Reservation Tracking Number is: {new_reservation.reservation_id}"
+
+    try:
+        send_email("Laorteable RTN", data["customer_email"], text_content)
+        return jsonify({
+            "message": "Reservation created successfully and email sent!",
+            "reservation_id": new_reservation.reservation_id
+            }), 201
+    except Exception as e:
+        print(str(e))
+        return jsonify({
+            "message": "Reservation created successfully, but email not sent!",
+            "reservation_id": new_reservation.reservation_id
+            }), 201
 
 
 @reservations_bp.route("/api/reservations/<string:reservation_id>", methods=["PUT", "PATCH"])
@@ -132,3 +143,4 @@ def delete_reservation(reservation_id):
     db.session.delete(res)
     db.session.commit()
     return jsonify({"message": "Reservation deleted successfully"}), 200
+
