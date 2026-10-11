@@ -33,6 +33,7 @@ class Product(db.Model):
     img_url = db.Column(db.String(200), nullable=False)
 
     price = db.Column(db.Integer, nullable=False)
+    previous_price = db.Column(db.Integer, nullable=True)
 
     category_id = db.Column(db.Integer, db.ForeignKey("category.category_id"), nullable=False)
     category = db.relationship("Category", back_populates="products")

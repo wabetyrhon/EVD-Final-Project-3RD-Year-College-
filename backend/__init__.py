@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 
 app = Flask(__name__, static_folder="../frontend", static_url_path="")
@@ -22,6 +23,8 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         }
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 ADMIN_HASH = getenv("ADMIN_HASH")
 
 from backend import dev

@@ -17,7 +17,8 @@ def get_products():
         "unit": p.unit,
         "category_id": p.category_id,
         "img_url": p.img_url,
-        "price": p.price
+        "price": p.price,
+        "previous_price": p.previous_price
         } for p in products]
     return jsonify(result), 200
 
@@ -32,7 +33,8 @@ def get_product(product_id):
         "unit": product.unit,
         "img_url": product.img_url,
         "category_id": product.category_id,
-        "price": product.price
+        "price": product.price,
+        "previous_price": product.previous_price
         }), 200
 
 
@@ -72,7 +74,12 @@ def update_product(product_id):
 
     product.name = data.get("name", product.name)
     product.unit = data.get("unit", product.unit)
+
+    if data.get("price", product.price) != product.price:
+        product.previous_price = product.price
+
     product.price = data.get("price", product.price)
+
     product.category_id = data.get("category_id", product.category_id)
     product.img_url = data.get("img_url", product.img_url)
 
