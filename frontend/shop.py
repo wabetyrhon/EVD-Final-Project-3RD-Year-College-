@@ -11,7 +11,7 @@ from pyscript import document, window, when, fetch
 from pyscript.ffi import create_proxy
 
 API = ""  # same origin as the Flask app
-STATIC = "/static/"
+STATIC = "/"
 
 CATEGORY_NAMES = {"pork": "Pork", "chicken": "Chicken", "sausage": "Hotdogs & Sausages",
                   "beef": "Beef", "fish": "Fish", "other": "Other products"}
@@ -134,6 +134,7 @@ async def load_products():
         products.append({
             "id": str(d["product_id"]), "pid": d["product_id"], "name": d["name"],
             "unit": d["unit"], "price": d["price"], "cat": category_of(d["name"]),
+            "img_url": d.get("img_url"),
         })
     render_categories()
 
@@ -146,7 +147,7 @@ def render_categories():
         if n:
             html += (
                 '<button class="cat-card" data-cat="%s">%s<h3>%s</h3><p>%d products</p></button>'
-            ) % (cid, photo(STATIC + "assets/categories/%s.jpg" % cid, "Category photo"), CATEGORY_NAMES[cid], n)
+            ) % (cid, photo(STATIC + "images/%s.jpg" % cid, "Category photo"), CATEGORY_NAMES[cid], n)
     q("#category-grid").innerHTML = html or '<p class="empty">No products yet. Please check back soon.</p>'
 
 
@@ -157,7 +158,7 @@ def show_category(cid):
             '<article class="pcard"><button class="pcard-main" data-open="%s" aria-label="View details for %s">'
             "%s<h3>%s</h3></button>"
             '<div class="meta"><span class="price">%s</span>%s</div></article>'
-        ) % (p["id"], esc(p["name"]), photo(STATIC + "assets/products/%s.jpg" % p["id"], "Product photo"),
+        ) % (p["id"], esc(p["name"]), photo(p.get("img_url") or "", "Product photo"),
              esc(p["name"]), price_text(p), add_btn(p))
     q("#product-grid").innerHTML = html
     q("#product-title").innerText = CATEGORY_NAMES[cid]
@@ -235,7 +236,7 @@ def on_product(event):
             '<div class="dlg-inner"><div class="dlg-head"><h3>%s</h3><button class="x" data-close="product-dialog" aria-label="Close">&times;</button></div>'
             '<div class="dlg-body">%s<dl><dt>Price</dt><dd>%s</dd><dt>Sold as</dt><dd>%s</dd>'
             "<dt>Storage</dt><dd>Keep frozen at -18°C or colder</dd></dl></div>%s</div>"
-        ) % (esc(p["name"]), photo(STATIC + "assets/products/%s.jpg" % p["id"], "Product photo"),
+        ) % (esc(p["name"]), photo(p.get("img_url") or "", "Product photo"),
              price_text(p), esc(p["unit"]), actions)
         dlg.showModal()
 
