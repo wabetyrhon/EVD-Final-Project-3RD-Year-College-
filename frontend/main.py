@@ -45,6 +45,7 @@ CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 cart = {}  # product id -> quantity (packs)
 owner_unlocked = False
 editing = None  # RTN of the reservation being edited
+details = {}  # name/contact/date waiting for confirmation
 drafts = {}  # product id -> quantity typed in the popup (kept when it closes)
 
 
@@ -174,7 +175,7 @@ def render_cart():
                 '<button class="btn small" data-act="minus" data-id="%s" aria-label="Less %s">-</button>'
                 "<span>%s</span>"
                 '<button class="btn small" data-act="plus" data-id="%s" aria-label="More %s">+</button>'
-                '</span><span>%s</span><button class="link" data-act="remove" data-id="%s">Remove</button></div>'
+                '</span><span>%s</span><button class="btn small ghost" data-act="remove" data-id="%s">Remove</button></div>'
             ) % (label(p), pid, p["name"], kg, pid, p["name"], peso(p["price"] * kg), pid)
         box.innerHTML = html
     q("#cart-total").innerText = peso(cart_total())
@@ -348,10 +349,49 @@ def on_reserve(event):
         toast("Add at least one product first")
         q("#products").scrollIntoView()
         return
+    show_confirm(name, contact, date)
+
+
+def cart_items():
+    return [{"id": pid, "name": product(pid)["name"], "unit": product(pid)["unit"], "qty": qty}
+            for pid, qty in cart.items()]
+
+
+def summary_html(items, total, name, contact, date):
+    rows = ""
+    for i in items:
+        p = product(i["id"])
+        rows += '<div class="cart-line"><span>%s</span><span>x%d</span><span>%s</span></div>' % (
+            esc(label(p)), i["qty"], peso(p["price"] * i["qty"]))
+    return (
+        '<div class="sum">%s<p class="total">Total <span>%s</span></p>'
+        '<dl class="facts-lite"><dt>Name</dt><dd>%s</dd><dt>Mobile</dt><dd>%s</dd>'
+        "<dt>Pickup date</dt><dd>%s</dd></dl></div>"
+    ) % (rows, peso(total), esc(name), esc(contact), esc(date))
+
+
+def show_confirm(name, contact, date):
+    global details
+    details = {"name": name, "contact": contact, "date": date}
+    dlg = q("#confirm-dialog")
+    dlg.innerHTML = (
+        '<div class="dlg-inner"><div class="dlg-head"><h3>%s</h3>'
+        '<button class="x" data-back aria-label="Close">&times;</button></div>%s'
+        '<p class="hint">Please check everything. You pay at the shop.</p>'
+        '<div class="dlg-foot"><button class="btn ghost" data-back>Go back</button>'
+        '<button class="btn" data-confirm>%s</button></div></div>'
+    ) % ("Review your changes" if editing else "Review your reservation",
+         summary_html(cart_items(), cart_total(), name, contact, date),
+         "Save changes" if editing else "Confirm reservation")
+    dlg.showModal()
+
+
+def save_reservation():
     orders = load_orders()
-    items = [{"id": pid, "name": product(pid)["name"], "unit": product(pid)["unit"], "qty": qty}
-             for pid, qty in cart.items()]
+    items = cart_items()
+    total = cart_total()
     now = window.Date.new().toLocaleString()
+    d = details
     if editing:
         rtn = editing
         for o in orders:
@@ -359,30 +399,67 @@ def on_reserve(event):
                 if o["status"] != "Pending":
                     toast("This reservation is already %s and can no longer be edited" % o["status"].lower())
                     stop_editing()
-                    return
-                o["name"], o["contact"], o["date"] = name, contact, date
-                o["items"], o["total"], o["edited"] = items, cart_total(), now
-        headline = "Reservation updated. Your RTN stays the same:"
+                    return None
+                o["name"], o["contact"], o["date"] = d["name"], d["contact"], d["date"]
+                o["items"], o["total"], o["edited"] = items, total, now
+        headline = "Reservation updated"
     else:
         rtn = new_rtn(orders)
         orders.append({
-            "rtn": rtn, "name": name, "contact": contact, "date": date,
-            "items": items, "total": cart_total(), "status": "Pending", "created": now,
+            "rtn": rtn, "name": d["name"], "contact": d["contact"], "date": d["date"],
+            "items": items, "total": total, "status": "Pending", "created": now,
         })
-        headline = "Reservation received. Save your RTN:"
+        headline = "Reservation received"
     save_orders(orders)
-    stop_editing()
-    cart.clear()
-    render_cart()
-    clear_form()
-    q("#reserve-msg").innerHTML = (
-        '<div class="rtn-box">%s<strong>%s</strong>'
-        "The owner will verify it before pickup. Use it under Check your RTN to see the status."
-        '<br><button class="btn small" data-copy="%s">Copy RTN</button></div>'
-    ) % (headline, rtn, rtn)
-    toast("Reservation saved")
-    if owner_unlocked:
-        render_owner()
+    return rtn, headline, items, total
+
+
+@when("click", "#confirm-dialog")
+def on_confirm(event):
+    t = event.target
+    dlg = q("#confirm-dialog")
+    if t.id == "confirm-dialog" or t.closest("[data-back]") or t.closest("[data-done]"):
+        dlg.close()  # outside click, Go back, x or Done: nothing is lost
+        return
+    copy = t.closest("[data-copy]")
+    if copy:
+        window.navigator.clipboard.writeText(copy.getAttribute("data-copy"))
+        toast("RTN copied")
+        return
+    if t.closest("[data-confirm]"):
+        result = save_reservation()
+        if not result:
+            dlg.close()
+            return
+        rtn, headline, items, total = result
+        d = details
+        dlg.innerHTML = (
+            '<div class="dlg-inner"><div class="dlg-head"><h3>%s</h3>'
+            '<button class="x" data-done aria-label="Close">&times;</button></div>'
+            '<div class="rtn-box">Save your RTN<strong>%s</strong>'
+            "Show it at the shop. The owner will verify it before pickup."
+            '<br><button class="btn small" data-copy="%s">Copy RTN</button></div>%s'
+            '<div class="dlg-foot"><button class="btn" data-done>Done</button></div></div>'
+        ) % (headline, rtn, rtn, summary_html(items, total, d["name"], d["contact"], d["date"]))
+        stop_editing()
+        cart.clear()
+        render_cart()
+        clear_form()
+        q("#reserve-msg").innerHTML = (
+            '<div class="rtn-box">%s. Your RTN:<strong>%s</strong>'
+            "The owner will verify it before pickup. Use it under Check your RTN to see the status."
+            '<br><button class="btn small" data-copy="%s">Copy RTN</button></div>'
+        ) % (headline, rtn, rtn)
+        if owner_unlocked:
+            render_owner()
+
+
+@when("click", "#cust-date")
+def on_date_click(event):
+    try:
+        q("#cust-date").showPicker()  # open the calendar when the field is clicked
+    except Exception:
+        pass
 
 
 @when("click", "#reserve-msg")
