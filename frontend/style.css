@@ -150,3 +150,20 @@ input[type=date]::-webkit-calendar-picker-indicator{background:url("data:image/s
 .dlg-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
 .dlg-foot .btn{margin:0}
 .sum .total{margin-top:10px}
+footer a{color:var(--ice)}
+.cart-line{flex-wrap:nowrap}
+.cart-line>span:first-child{min-width:0;overflow-wrap:anywhere}
+#cart-items .cart-line{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:center}
+#cart-items .cart-line>span:nth-child(3){min-width:84px;text-align:right}
+.rm-x{display:none}
+.two-col{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))}
+@media (max-width:480px){
+  .panel{padding:16px}
+  #cart-items .cart-line{gap:6px;font-size:.92rem}
+  #cart-items .cart-line>span:nth-child(3){min-width:70px}
+  .rm-text{display:none}
+  .rm-x{display:inline;font-size:1.1rem;line-height:1}
+  .cart-line .qty{gap:4px}
+  .qty .btn{padding:2px 9px}
+  #cart-items .cart-line>.btn{padding:3px 11px}
+}

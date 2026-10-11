@@ -8,13 +8,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://pyscript.net/releases/2025.8.1/core.css">
   <script type="module" src="https://pyscript.net/releases/2025.8.1/core.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <header class="nav">
   <a href="#home" class="logo" aria-label="Laortealbe home">
-    <img src="assets/logo.png" alt="Laortealbe, fresh and cheap">
+    <img src="/static/assets/logo.png" alt="Laortealbe, fresh and cheap">
   </a>
   <nav aria-label="Main">
     <a href="#home">Home</a>
@@ -25,10 +25,10 @@
 </header>
 
 <section id="home" class="hero">
-  <!-- VIDEO PLACEHOLDER: put your promo at assets/promo.mp4 -->
-  <div class="hero-ph">Promo video placeholder (assets/promo.mp4)</div>
-  <video autoplay muted loop playsinline poster="assets/hero-poster.jpg" onerror="this.remove()">
-    <source src="assets/promo.mp4" type="video/mp4">
+  <!-- VIDEO PLACEHOLDER: put your promo at /static/assets/promo.mp4 -->
+  <div class="hero-ph">Promo video placeholder (/static/assets/promo.mp4)</div>
+  <video autoplay muted loop playsinline poster="/static/assets/hero-poster.jpg" onerror="this.remove()">
+    <source src="/static/assets/promo.mp4" type="video/mp4">
   </video>
   <div class="hero-text">
     <h1>Frozen meat, reserved in a minute.</h1>
@@ -70,7 +70,7 @@
     <div id="category-view">
       <h2>Shop by category</h2>
       <p class="sub">Select a category to see its products.</p>
-      <div id="category-grid" class="grid"></div>
+      <div id="category-grid" class="grid"><p class="muted">Loading products...</p></div>
     </div>
     <div id="product-view" class="hidden">
       <button id="back-btn" class="btn ghost back" type="button">&larr; Back to categories</button>
@@ -82,7 +82,6 @@
 
   <section id="reservation">
     <h2>Reservation</h2>
-    <div id="edit-banner" class="edit-banner hidden" role="status">Editing reservation <strong id="edit-rtn"></strong>. Change your items or details, then press Save changes. <button id="edit-cancel" class="link" type="button">Cancel editing</button></div>
     <div class="two-col">
       <div class="panel">
         <h3>Your items</h3>
@@ -95,6 +94,9 @@
         <label for="cust-name">Full name</label>
         <input id="cust-name" type="text" autocomplete="name">
         <p class="err" id="err-name"></p>
+        <label for="cust-email">Email</label>
+        <input id="cust-email" type="email" autocomplete="email">
+        <p class="err" id="err-email"></p>
         <label for="cust-contact">Mobile number</label>
         <input id="cust-contact" type="tel" inputmode="numeric" placeholder="09XXXXXXXXX" autocomplete="tel">
         <p class="err" id="err-contact"></p>
@@ -109,7 +111,7 @@
     <div class="panel track">
       <h3>Already reserved? Check your RTN</h3>
       <div class="row">
-        <input id="track-input" type="text" placeholder="LMS-XXXXXX" aria-label="Reservation tracking number">
+        <input id="track-input" type="text" placeholder="Enter your RTN" aria-label="Reservation tracking number">
         <button id="track-btn" class="btn" type="button">Check status</button>
       </div>
       <div id="track-result" role="status"></div>
@@ -119,25 +121,15 @@
 
 <footer>
   <p>© 2026 All rights reserved</p>
-  <p><a href="#home">Back to top</a> · <button id="owner-open" class="link" type="button">Owner login</button></p>
+  <p><a href="#home">Back to top</a> · <a href="/login">Owner login</a></p>
 </footer>
 
 <dialog id="product-dialog" aria-label="Product details"></dialog>
 
 <dialog id="confirm-dialog" aria-label="Reservation summary"></dialog>
 
-<dialog id="owner-dialog" aria-label="Owner panel">
-  <div class="dlg-head"><h3>Owner panel</h3><button class="x" data-close="owner-dialog" aria-label="Close">&times;</button></div>
-  <div class="row">
-    <input id="owner-pin" type="password" placeholder="Owner PIN" aria-label="Owner PIN">
-    <button id="owner-btn" class="btn" type="button">Unlock</button>
-  </div>
-  <p id="owner-msg" class="err" role="status"></p>
-  <div id="owner-list"></div>
-</dialog>
-
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script type="mpy" src="./main.py"></script>
+<script type="mpy" src="/static/shop.py"></script>
 </body>
 </html>
