@@ -44,6 +44,8 @@ CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 cart = {}  # product id -> quantity (packs)
 owner_unlocked = False
+editing = None  # RTN of the reservation being edited
+drafts = {}  # product id -> quantity typed in the popup (kept when it closes)
 
 
 # ---------- helpers ----------
@@ -187,6 +189,7 @@ def render_owner():
     html = ""
     for o in reversed(orders):
         actions = ""
+        placed = "Placed " + o["created"] + (", edited " + o["edited"] if o.get("edited") else "")
         if o["status"] == "Pending":
             actions = (
                 '<div class="actions"><button class="btn small" data-verify="%s">Verify</button>'
@@ -194,9 +197,9 @@ def render_owner():
             ) % (o["rtn"], o["rtn"])
         html += (
             '<div class="order"><strong>%s</strong> %s<br>%s (%s), pickup %s<br>%s, %s<br>'
-            '<span class="muted">Placed %s</span>%s</div>'
+            '<span class="muted">%s</span>%s</div>'
         ) % (o["rtn"], badge(o["status"]), esc(o["name"]), esc(o["contact"]), esc(o["date"]),
-             esc(items_text(o["items"])), peso(o["total"]), esc(o["created"]), actions)
+             esc(items_text(o["items"])), peso(o["total"]), esc(placed), actions)
     q("#owner-list").innerHTML = html
 
 
@@ -230,22 +233,23 @@ def on_product(event):
     elif opn:
         p = product(opn.getAttribute("data-open"))
         dlg = q("#product-dialog")
+        dq = drafts.get(p["id"], 1)
         if p["price"] is None:
             actions = '<p class="muted">Price coming soon. This item cannot be reserved yet.</p>'
         else:
             actions = (
                 '<div class="dlg-buy"><label for="dlg-qty">Quantity</label>'
                 '<div class="stepper"><button class="btn ghost" data-step="-1" aria-label="Less">-</button>'
-                '<input id="dlg-qty" type="number" min="1" step="1" value="1" data-price="%s">'
+                '<input id="dlg-qty" type="number" min="1" step="1" value="%d" data-price="%s" data-pid="%s">'
                 '<button class="btn ghost" data-step="1" aria-label="More">+</button></div>'
                 '<p class="dlg-total">Total <strong id="dlg-total">%s</strong>'
-                '<span id="dlg-calc" class="muted">1 x %s</span></p>'
+                '<span id="dlg-calc" class="muted">%d x %s</span></p>'
                 '<button class="btn" data-add-dlg="%s">Add to reservation</button></div>'
-            ) % (p["price"], peso(p["price"]), peso(p["price"]), p["id"])
+            ) % (dq, p["price"], p["id"], peso(p["price"] * dq), dq, peso(p["price"]), p["id"])
         dlg.innerHTML = (
-            '<div class="dlg-head"><h3>%s</h3><button class="x" data-close="product-dialog" aria-label="Close">&times;</button></div>'
+            '<div class="dlg-inner"><div class="dlg-head"><h3>%s</h3><button class="x" data-close="product-dialog" aria-label="Close">&times;</button></div>'
             '<div class="dlg-body">%s<dl><dt>Price</dt><dd>%s</dd><dt>Sold as</dt><dd>%s</dd>'
-            "<dt>Storage</dt><dd>Keep frozen at -18°C or colder</dd></dl></div>%s"
+            "<dt>Storage</dt><dd>Keep frozen at -18°C or colder</dd></dl></div>%s</div>"
         ) % (p["name"], photo("assets/products/%s.jpg" % p["id"], "Product photo"),
              price_text(p), p["unit"], actions)
         dlg.showModal()
@@ -254,6 +258,9 @@ def on_product(event):
 @when("click", "#product-dialog")
 def on_dialog(event):
     t = event.target
+    if t.id == "product-dialog":  # click on the dark area outside the popup
+        q("#product-dialog").close()
+        return
     if t.closest("[data-close]"):
         q("#product-dialog").close()
         return
@@ -270,6 +277,7 @@ def on_dialog(event):
             toast("Enter a quantity of at least 1")
             return
         add_to_cart(btn.getAttribute("data-add-dlg"), qty)
+        drafts.pop(btn.getAttribute("data-add-dlg"), None)
         q("#product-dialog").close()
 
 
@@ -277,6 +285,8 @@ def update_total():
     box = q("#dlg-qty")
     qty = max(0, int(float(box.value or 0)))
     price = float(box.getAttribute("data-price"))
+    if qty >= 1:
+        drafts[box.getAttribute("data-pid")] = qty
     q("#dlg-total").innerText = peso(price * qty)
     q("#dlg-calc").innerText = "%d x %s" % (qty, peso(price))
 
@@ -291,6 +301,19 @@ def on_qty_typed(event):
 def on_owner_close(event):
     if event.target.closest("[data-close]"):
         q("#owner-dialog").close()
+
+
+def clear_form():
+    for f in ("name", "contact", "date"):
+        q("#cust-" + f).value = ""
+        set_error(f, "")
+
+
+def stop_editing():
+    global editing
+    editing = None
+    q("#edit-banner").classList.add("hidden")
+    q("#reserve-btn").innerText = "Reserve now"
 
 
 # ---------- events: reservation ----------
@@ -326,21 +349,37 @@ def on_reserve(event):
         q("#products").scrollIntoView()
         return
     orders = load_orders()
-    rtn = new_rtn(orders)
-    items = [{"name": product(pid)["name"], "unit": product(pid)["unit"], "qty": qty} for pid, qty in cart.items()]
-    orders.append({
-        "rtn": rtn, "name": name, "contact": contact, "date": date,
-        "items": items, "total": cart_total(), "status": "Pending",
-        "created": window.Date.new().toLocaleString(),
-    })
+    items = [{"id": pid, "name": product(pid)["name"], "unit": product(pid)["unit"], "qty": qty}
+             for pid, qty in cart.items()]
+    now = window.Date.new().toLocaleString()
+    if editing:
+        rtn = editing
+        for o in orders:
+            if o["rtn"] == rtn:
+                if o["status"] != "Pending":
+                    toast("This reservation is already %s and can no longer be edited" % o["status"].lower())
+                    stop_editing()
+                    return
+                o["name"], o["contact"], o["date"] = name, contact, date
+                o["items"], o["total"], o["edited"] = items, cart_total(), now
+        headline = "Reservation updated. Your RTN stays the same:"
+    else:
+        rtn = new_rtn(orders)
+        orders.append({
+            "rtn": rtn, "name": name, "contact": contact, "date": date,
+            "items": items, "total": cart_total(), "status": "Pending", "created": now,
+        })
+        headline = "Reservation received. Save your RTN:"
     save_orders(orders)
+    stop_editing()
     cart.clear()
     render_cart()
+    clear_form()
     q("#reserve-msg").innerHTML = (
-        '<div class="rtn-box">Reservation received. Save your RTN:<strong>%s</strong>'
+        '<div class="rtn-box">%s<strong>%s</strong>'
         "The owner will verify it before pickup. Use it under Check your RTN to see the status."
         '<br><button class="btn small" data-copy="%s">Copy RTN</button></div>'
-    ) % (rtn, rtn)
+    ) % (headline, rtn, rtn)
     toast("Reservation saved")
     if owner_unlocked:
         render_owner()
@@ -362,15 +401,62 @@ def on_track(event):
         if o["rtn"] == code:
             note = {
                 "Pending": "Waiting for the owner to verify your reservation.",
-                "Verified": "Verified. Show this RTN at the shop on your pickup date.",
+                "Verified": "Verified. Show this RTN at the shop on your pickup date. It can no longer be edited online.",
                 "Cancelled": "This reservation was cancelled. Please contact the shop.",
             }[o["status"]]
+            extra = ""
+            if o["status"] == "Pending":
+                extra = '<br><button class="btn small" data-edit="%s">Edit reservation</button>' % o["rtn"]
             out.innerHTML = (
-                '<div class="rtn-box"><strong>%s</strong>%s<br>%s<br>%s, %s<br>Pickup: %s<br>%s</div>'
+                '<div class="rtn-box"><strong>%s</strong>%s<br>%s<br>%s, %s<br>Pickup: %s<br>%s%s</div>'
             ) % (o["rtn"], badge(o["status"]), esc(o["name"]), esc(items_text(o["items"])),
-                 peso(o["total"]), esc(o["date"]), note)
+                 peso(o["total"]), esc(o["date"]), note, extra)
             return
     out.innerHTML = '<p class="err">No reservation found for that RTN. Check the code (format LMS-XXXXXX) and try again.</p>'
+
+
+@when("click", "#track-result")
+def on_edit_click(event):
+    global editing
+    btn = event.target.closest("[data-edit]")
+    if not btn:
+        return
+    code = btn.getAttribute("data-edit")
+    for o in load_orders():
+        if o["rtn"] == code:
+            if o["status"] != "Pending":
+                toast("Only pending reservations can be edited")
+                return
+            cart.clear()
+            for i in o["items"]:
+                pid = i.get("id")
+                if not pid:  # older saved reservations have no id
+                    for p in PRODUCTS:
+                        if p["name"] == i["name"] and p["unit"] == i["unit"]:
+                            pid = p["id"]
+                if pid:
+                    cart[pid] = i["qty"]
+            editing = code
+            q("#cust-name").value = o["name"]
+            q("#cust-contact").value = o["contact"]
+            q("#cust-date").value = o["date"]
+            q("#edit-rtn").innerText = code
+            q("#edit-banner").classList.remove("hidden")
+            q("#reserve-btn").innerText = "Save changes"
+            q("#reserve-msg").innerHTML = ""
+            render_cart()
+            q("#reservation").scrollIntoView()
+            toast("Editing %s. Change your items or details, then save." % code)
+            return
+
+
+@when("click", "#edit-cancel")
+def on_edit_cancel(event):
+    stop_editing()
+    cart.clear()
+    render_cart()
+    clear_form()
+    toast("Editing cancelled. Your reservation was not changed.")
 
 
 # ---------- events: owner ----------
