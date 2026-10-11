@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Laortealbe Meat Shop</title>
+  <title>Frozen Meat Shop | Reserve online</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Gelasio:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://pyscript.net/releases/2025.8.1/core.css">
   <script type="module" src="https://pyscript.net/releases/2025.8.1/core.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -13,95 +13,117 @@
 <body>
 
 <header class="nav">
-  <a href="#home" class="brand">
-    <img src="assets/logo.png" alt="" onerror="this.style.display='none'">
-    <span>LAORTEALBE <small>MEAT<br>SHOP</small></span>
+  <a href="#home" class="logo" aria-label="Home">
+    <!-- LOGO PLACEHOLDER: put your logo at assets/logo.png -->
+    <span class="ph">Logo</span>
+    <img src="assets/logo.png" alt="Shop logo" onerror="this.remove()">
   </a>
-  <nav>
+  <nav aria-label="Main">
     <a href="#home">Home</a>
     <a href="#about">About</a>
     <a href="#products">Products</a>
+    <a href="#reservation" class="nav-cta">Reservation <span id="cart-count" class="count" aria-label="items in reservation">0</span></a>
   </nav>
 </header>
 
 <section id="home" class="hero">
-  <video autoplay muted loop playsinline poster="assets/hero-poster.jpg">
+  <!-- VIDEO PLACEHOLDER: put your promo at assets/promo.mp4 -->
+  <div class="hero-ph">Promo video placeholder (assets/promo.mp4)</div>
+  <video autoplay muted loop playsinline poster="assets/hero-poster.jpg" onerror="this.remove()">
     <source src="assets/promo.mp4" type="video/mp4">
   </video>
   <div class="hero-text">
-    <h1>Fresh frozen cuts, reserved in minutes.</h1>
-    <p>No account needed. Reserve online, get your RTN, pick up at the shop.</p>
-    <a class="btn" href="#products">Browse products</a>
+    <h1>Frozen meat, reserved in a minute.</h1>
+    <p>Pick your cuts, get a reservation number, and pay when you pick up. No account needed.</p>
+    <div class="hero-actions">
+      <a class="btn" href="#products">Browse products</a>
+      <a class="btn ghost" href="#reservation">Track a reservation</a>
+    </div>
   </div>
 </section>
 
-<section class="college">
-  <p>Cebu Eastern College, Inc.</p>
-  <h2>College of Information Technology</h2>
-</section>
-
 <main>
+  <section class="steps" aria-label="How it works">
+    <ol>
+      <li><b>1. Choose</b><span>Open a category and add cuts to your reservation.</span></li>
+      <li><b>2. Reserve</b><span>Enter your name, number and pickup date. You get an RTN.</span></li>
+      <li><b>3. Pick up</b><span>The owner verifies your RTN. Show it at the shop.</span></li>
+    </ol>
+  </section>
+
   <section id="about">
-    <h2 class="title">About us</h2>
-    <p>Laortealbe Meat Shop sells frozen pork, chicken and tuna to households and small eateries in Cebu. Replace this paragraph with your group's business concept: who you serve, where you source your meat, and how pickup works.</p>
+    <h2>About us</h2>
+    <p>Write your group's business concept here: who you serve, where your meat comes from, how it is stored frozen, and how pickup works.</p>
   </section>
 
   <section id="products">
-    <h2 class="title">Check out our products!</h2>
-    <div id="product-grid" class="grid"></div>
+    <div id="category-view">
+      <h2>Shop by category</h2>
+      <p class="sub">Select a category to see its products.</p>
+      <div id="category-grid" class="grid"></div>
+    </div>
+    <div id="product-view" class="hidden">
+      <button id="back-btn" class="link" type="button">&larr; All categories</button>
+      <h2 id="product-title"></h2>
+      <p class="sub">Select a product for details, or add it straight to your reservation.</p>
+      <div id="product-grid" class="grid"></div>
+    </div>
   </section>
 
-  <section id="reserve">
-    <h2 class="title">Your reservation</h2>
+  <section id="reservation">
+    <h2>Reservation</h2>
     <div class="two-col">
       <div class="panel">
-        <h3>Items</h3>
-        <div id="cart-items"><p class="muted">Nothing here yet. Add a product above.</p></div>
-        <p class="total">Total: <span id="cart-total">₱0.00</span></p>
+        <h3>Your items</h3>
+        <div id="cart-items"></div>
+        <p class="total">Total <span id="cart-total">₱0.00</span></p>
+        <p class="hint">You pay at the shop. Prices are per kilo.</p>
       </div>
       <div class="panel">
         <h3>Your details</h3>
         <label for="cust-name">Full name</label>
         <input id="cust-name" type="text" autocomplete="name">
+        <p class="err" id="err-name"></p>
         <label for="cust-contact">Mobile number</label>
-        <input id="cust-contact" type="tel" autocomplete="tel">
+        <input id="cust-contact" type="tel" inputmode="numeric" placeholder="09XXXXXXXXX" autocomplete="tel">
+        <p class="err" id="err-contact"></p>
         <label for="cust-date">Pickup date</label>
         <input id="cust-date" type="date">
+        <p class="err" id="err-date"></p>
         <button id="reserve-btn" class="btn" type="button">Reserve now</button>
-        <p id="reserve-msg" class="msg" role="status"></p>
+        <div id="reserve-msg" role="status"></div>
       </div>
     </div>
-  </section>
 
-  <section id="track">
-    <h2 class="title">Track your RTN</h2>
-    <div class="panel narrow">
-      <label for="track-input">Enter your reservation tracking number (RTN)</label>
+    <div class="panel track">
+      <h3>Already reserved? Check your RTN</h3>
       <div class="row">
-        <input id="track-input" type="text" placeholder="LMS-XXXXXX">
+        <input id="track-input" type="text" placeholder="LMS-XXXXXX" aria-label="Reservation tracking number">
         <button id="track-btn" class="btn" type="button">Check status</button>
       </div>
       <div id="track-result" role="status"></div>
     </div>
   </section>
-
-  <section id="owner">
-    <h2 class="title">Owner panel</h2>
-    <div class="panel">
-      <div id="owner-login" class="row">
-        <input id="owner-pin" type="password" placeholder="Owner PIN" aria-label="Owner PIN">
-        <button id="owner-btn" class="btn" type="button">Unlock</button>
-      </div>
-      <p id="owner-msg" class="msg" role="status"></p>
-      <div id="owner-list"></div>
-    </div>
-  </section>
 </main>
 
 <footer>
-  <p>© Laortealbe.com, a Meatshop Philippine brand</p>
-  <p>FAQ · Privacy Policy · Terms and Conditions</p>
+  <p>© 2026 All rights reserved</p>
+  <p><a href="#home">Back to top</a> · <button id="owner-open" class="link" type="button">Owner login</button></p>
 </footer>
+
+<dialog id="product-dialog" aria-label="Product details"></dialog>
+
+<dialog id="owner-dialog" aria-label="Owner panel">
+  <div class="dlg-head"><h3>Owner panel</h3><button class="x" data-close="owner-dialog" aria-label="Close">&times;</button></div>
+  <div class="row">
+    <input id="owner-pin" type="password" placeholder="Owner PIN" aria-label="Owner PIN">
+    <button id="owner-btn" class="btn" type="button">Unlock</button>
+  </div>
+  <p id="owner-msg" class="err" role="status"></p>
+  <div id="owner-list"></div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script type="mpy" src="./main.py"></script>
 </body>
