@@ -1,20 +1,31 @@
 from os import getenv
+from dotenv import load_dotenv
 from datetime import timedelta
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
+load_dotenv()
+
+GMAIL_REFRESH_TOKEN = getenv("GMAIL_REFRESH_TOKEN")
+GMAIL_CLIENT_ID = getenv("GMAIL_CLIENT_ID")
+GMAIL_CLIENT_SECRET = getenv("GMAIL_CLIENT_SECRET")
+SECRET_KEY = getenv("SECRET_KEY")
+DB_URI = getenv("DB_URI")
+ADMIN_HASH = getenv("ADMIN_HASH")
+DEV_SECRET = getenv("DEV_SECRET")
+
 
 app = Flask(__name__, static_folder="../frontend", static_url_path="")
 
-app.config["SECRET_KEY"] = getenv("SECRET_KEY")
+app.config["SECRET_KEY"] = SECRET_KEY
 app.config.update(
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax'
         )
 
-app.config["SQLALCHEMY_DATABASE_URI"] = getenv("DB_URI")
+app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'connect_args': {
@@ -24,8 +35,6 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
-ADMIN_HASH = getenv("ADMIN_HASH")
 
 from backend import dev
 from backend.routes.main import main_bp

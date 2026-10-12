@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash
 from flask import jsonify, request
 from sqlalchemy import text
 
-from backend import app, db
+from backend import app, db, DEV_SECRET
 from backend.models import Reservation, ReservationItem, Product, Category
 
 def reset_database():
@@ -45,7 +45,7 @@ def resetDB():
     if not password:
         return jsonify({"msg": "Missing password"}), 400
 
-    if not check_password_hash(getenv("DEV_SECRET"), password):
+    if not check_password_hash(DEV_SECRET, password):
         return jsonify({"msg": "Wrong password"}), 401
 
     if reset_database():

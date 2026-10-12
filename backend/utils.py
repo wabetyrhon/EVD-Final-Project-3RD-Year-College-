@@ -13,6 +13,8 @@ from googleapiclient.discovery import build
 from functools import wraps
 from flask import jsonify, session
 
+from backend import GMAIL_REFRESH_TOKEN, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET
+
 
 def admin_required(f):
     @wraps(f)
@@ -32,10 +34,10 @@ def get_gmail_service():
     """Authenticates using environment variables and returns the Gmail service client."""
     creds = Credentials(
         token=None,
-        refresh_token=getenv("GMAIL_REFRESH_TOKEN"),
+        refresh_token=GMAIL_REFRESH_TOKEN,
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=getenv("GMAIL_CLIENT_ID"),
-        client_secret=getenv("GMAIL_CLIENT_SECRET")
+        client_id=GMAIL_CLIENT_ID,
+        client_secret=GMAIL_CLIENT_SECRET
     )
 
     if not creds.valid:
