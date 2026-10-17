@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin | Laortealbe Meat Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://pyscript.net/releases/2025.8.1/core.css">
+  <script type="module" src="https://pyscript.net/releases/2025.8.1/core.js"></script>
+  <style>
+/* Admin dashboard: same tokens, fonts and components as the landing page (style.css) */
+:root{--bg:#f5faf8;--surface:#ffffff;--surface2:#e6f1ee;--line:#d5e3de;--text:#14231c;--muted:#5b7068;--ice:#1f6b4f;--ink:#ffffff;--bad:#c0392b;--r:16px;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Instrument Sans',system-ui,sans-serif;line-height:1.55}
+h1,h2,h3{font-family:'Bricolage Grotesque',sans-serif;margin:0;line-height:1.1;letter-spacing:-.01em}
+h1{font-size:clamp(1.7rem,3vw,2.3rem)}
+h2{font-size:1.35rem}
+h3{font-size:1.3rem}
+a{color:inherit}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+:focus-visible{outline:3px solid var(--ice);outline-offset:2px}
+
+/* layout */
+.shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:22px;padding:22px 18px;background:var(--surface);border-right:1px solid var(--line)}
+.brand img{display:block;width:100%;max-width:190px;height:auto}
+.side nav{display:flex;flex-direction:column;gap:4px}
+.nav-link{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;color:var(--text);font:inherit;font-weight:500;padding:10px 14px;border-radius:12px;cursor:pointer}
+.nav-link:hover{background:var(--surface2)}
+.nav-link.active{background:var(--ice);color:var(--ink)}
+.pill{min-width:24px;padding:0 8px;border-radius:99px;background:var(--surface2);color:var(--ice);font-size:.8rem;font-weight:600;text-align:center}
+.nav-link.active .pill{background:var(--ink)}
+.side-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center}
+.content{min-width:0;padding:26px clamp(16px,3vw,40px) 60px}
+.topbar{margin-bottom:20px}
+main section{display:flex;flex-direction:column;gap:18px}
+
+/* buttons & links */
+.btn{background:var(--ice);color:var(--ink);border:0;border-radius:99px;padding:10px 20px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{background:#185a42}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.small{padding:5px 14px;font-size:.9rem}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--muted)}
+.btn.ghost:hover{background:var(--surface2)}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid #e5b4ad}
+.btn.danger:hover{background:#fdecea}
+.btn.bad{background:var(--bad)}
+.btn.bad:hover{background:#a23024}
+.link{background:none;border:0;color:var(--ice);font:inherit;cursor:pointer;padding:0;text-decoration:underline}
+
+/* cards, stats */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 3px rgba(20,35,28,.08)}
+.card-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:0 1px 3px rgba(20,35,28,.08)}
+.stat span{display:block;color:var(--muted)}
+.stat strong{display:block;font-family:'Bricolage Grotesque',sans-serif;font-size:2rem;color:var(--ice);margin-top:2px}
+
+/* toolbar & forms */
+.toolbar{display:flex;gap:12px;flex-wrap:wrap}
+.toolbar input{flex:1 1 240px;width:auto}
+.toolbar select{flex:0 1 220px;width:auto}
+label{display:block;margin:14px 0 4px;font-weight:500}
+input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+input[aria-invalid=true],select[aria-invalid=true]{border-color:var(--bad)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.err{color:var(--bad);margin:4px 0 0;font-size:.92rem}
+.img-row{display:flex;gap:12px;align-items:center}
+.img-row input{flex:1}
+
+/* tables */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:.88rem;padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#f9fcfb}
+th.r,td.actions{text-align:right;white-space:nowrap}
+td.actions .btn{margin-left:6px}
+.empty-row{text-align:center;color:var(--muted);padding:26px 16px}
+.foot-note{margin:0;padding:12px 20px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line)}
+.rid{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem;overflow-wrap:anywhere}
+.thumb{position:relative;width:48px;height:48px;border-radius:10px;overflow:hidden;background:var(--surface2);border:1px dashed var(--line);display:grid;place-items:center;color:var(--muted);font-size:.62rem;text-align:center}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface2)}
+.thumb.big{width:64px;height:64px;flex:none}
+.badge{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.82rem;font-weight:600;background:#e4e9e7;color:var(--text)}
+.badge.today{background:#bfe8cd}
+.badge.up{background:#d6ecf4}
+.badge.past{background:#e4e9e7;color:var(--muted)}
+
+/* upcoming list */
+.list-row{display:grid;grid-template-columns:1fr auto auto auto;gap:14px;align-items:center;padding:12px 20px;border-top:1px solid var(--line)}
+.list-row .muted{display:block;font-size:.88rem}
+
+/* dialogs */
+dialog{background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:20px;padding:0;width:min(560px,92vw);max-height:90vh}
+dialog::backdrop{background:rgba(10,30,22,.5)}
+.dlg-inner{padding:22px}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.x{background:none;border:0;color:var(--text);font-size:1.8rem;cursor:pointer;line-height:1}
+.dlg-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.facts-lite{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:12px 0}
+.facts-lite dt{color:var(--muted)}
+.facts-lite dd{margin:0;overflow-wrap:anywhere}
+.items{width:100%;min-width:0}
+.items td,.items th{padding:8px 4px}
+.items .r{text-align:right}
+.total-row{display:flex;justify-content:space-between;font-size:1.2rem;font-weight:600;margin-top:10px}
+
+/* banner & toast */
+.banner{background:#fdecea;border:1px solid #e5b4ad;color:#8a2a20;border-radius:12px;padding:12px 16px;margin-bottom:16px}
+.banner a{font-weight:600}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--ice);color:var(--ink);padding:10px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:50}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.bad{background:var(--bad)}
+
+/* small screens: sidebar becomes a top bar */
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 16px;border-right:0;border-bottom:1px solid var(--line)}
+  .brand img{width:150px}
+  .side nav{flex-direction:row;order:3;width:100%;overflow-x:auto}
+  .nav-link{width:auto;white-space:nowrap}
+  .side-foot{margin:0 0 0 auto;gap:14px}
+  .list-row{grid-template-columns:1fr auto}
+}
+@media (max-width:520px){.form-row{grid-template-columns:1fr}.dlg-foot .btn{flex:1}}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+.chg{display:inline-flex;align-items:center;gap:5px;padding:1px 10px;border-radius:99px;font-size:.8rem;font-weight:600;white-space:nowrap;margin-top:4px}
+.chg s{font-weight:500}
+.chg.down{background:#d9f2e1;color:#14663a}
+.chg.up{background:#fde3df;color:#9c2b1f}
+.small{font-size:.9rem;margin:10px 0 0}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="side">
+    <a href="#overview" class="brand" aria-label="Laortealbe admin">
+      <img src="/logo.png" alt="Laortealbe, fresh and cheap">
+    </a>
+    <nav aria-label="Admin sections">
+      <button class="nav-link active" data-action="nav" data-view="overview">Overview</button>
+      <button class="nav-link" data-action="nav" data-view="products">Products <span id="nav-products-count" class="pill">0</span></button>
+      <button class="nav-link" data-action="nav" data-view="reservations">Reservations <span id="nav-res-count" class="pill">0</span></button>
+    </nav>
+    <div class="side-foot">
+      <a href="/" class="link">View shop</a>
+      <a href="/logout" class="btn ghost small">Log out</a>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <h1 id="page-title">Overview</h1>
+    </header>
+
+    <div id="banner" class="banner hidden" role="alert"></div>
+
+    <main>
+      <!-- Overview -->
+      <section id="view-overview">
+        <div class="stats">
+          <div class="stat"><span>Products</span><strong id="stat-products">-</strong></div>
+          <div class="stat"><span>Reservations</span><strong id="stat-res">-</strong></div>
+          <div class="stat"><span>Pickups today</span><strong id="stat-today">-</strong></div>
+          <div class="stat"><span>Upcoming value</span><strong id="stat-value">-</strong></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h2>Upcoming pickups</h2>
+            <button class="link" data-action="nav" data-view="reservations">View all reservations</button>
+          </div>
+          <div id="upcoming-list"><p class="empty-row">Loading...</p></div>
+        </div>
+      </section>
+
+      <!-- Products -->
+      <section id="view-products" class="hidden">
+        <div class="toolbar">
+          <input id="prod-search" type="search" placeholder="Search products" aria-label="Search products">
+          <select id="prod-cat-filter" aria-label="Filter by category"><option value="">All categories</option></select>
+          <button class="btn" data-action="add-product">Add product</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Photo</th><th>Name</th><th>Category</th><th>Price</th><th>Unit</th><th class="r">Actions</th></tr></thead>
+              <tbody id="products-body"><tr><td colspan="6" class="empty-row">Loading...</td></tr></tbody>
+            </table>
+          </div>
+          <p id="prod-count" class="foot-note"></p>
+        </div>
+      </section>
+
+      <!-- Reservations -->
+      <section id="view-reservations" class="hidden">
+        <div class="toolbar">
+          <input id="res-search" type="search" placeholder="Search RTN, name, email or phone" aria-label="Search reservations">
+          <select id="res-date-filter" aria-label="Filter by pickup date">
+            <option value="">All pickup dates</option>
+            <option value="today">Today</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="past">Past</option>
+            <option value="none">No date set</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>RTN</th><th>Customer</th><th>Pickup</th><th>Items</th><th class="r">Actions</th></tr></thead>
+              <tbody id="reservations-body"><tr><td colspan="5" class="empty-row">Loading...</td></tr></tbody>
+            </table>
+          </div>
+          <p id="res-count" class="foot-note"></p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- Add / edit product -->
+<dialog id="product-dialog" aria-labelledby="pf-title">
+  <div class="dlg-inner">
+    <div class="dlg-head"><h3 id="pf-title">Add product</h3><button class="x" data-action="close" data-target="product-dialog" aria-label="Close">&times;</button></div>
+    <input type="hidden" id="pf-id">
+    <label for="pf-name">Product name</label>
+    <input id="pf-name" type="text">
+    <p class="err" id="pf-err-name"></p>
+    <div class="form-row">
+      <div>
+        <label for="pf-unit">Unit</label>
+        <input id="pf-unit" type="text" placeholder="e.g. 1 kg, 250 g">
+        <p class="err" id="pf-err-unit"></p>
+      </div>
+      <div>
+        <label for="pf-price">Price (₱)</label>
+        <input id="pf-price" type="number" min="0" step="1">
+        <p class="err" id="pf-err-price"></p>
+      </div>
+    </div>
+    <p class="muted small">If you change the price, customers see the old price with an arrow until the next price change.</p>
+    <label for="pf-category">Category</label>
+    <select id="pf-category"></select>
+    <p class="err" id="pf-err-category"></p>
+    <label for="pf-img">Image URL <span class="muted">(optional)</span></label>
+    <div class="img-row">
+      <input id="pf-img" type="text" placeholder="/images/pata.jpg">
+      <div id="pf-preview" class="thumb big"><span>No image</span></div>
+    </div>
+    <p class="err" id="pf-error" role="alert"></p>
+    <div class="dlg-foot">
+      <button class="btn ghost" data-action="close" data-target="product-dialog">Cancel</button>
+      <button class="btn" id="pf-save" data-action="save-product">Save product</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- View reservation -->
+<dialog id="res-view-dialog" aria-label="Reservation details" data-bd></dialog>
+
+<!-- Edit reservation details -->
+<dialog id="res-edit-dialog" aria-labelledby="re-title">
+  <div class="dlg-inner">
+    <div class="dlg-head"><h3 id="re-title">Edit reservation</h3><button class="x" data-action="close" data-target="res-edit-dialog" aria-label="Close">&times;</button></div>
+    <input type="hidden" id="re-id">
+    <p class="muted">RTN <span id="re-rtn" class="rid"></span></p>
+    <label for="re-name">Customer name</label>
+    <input id="re-name" type="text">
+    <p class="err" id="re-err-name"></p>
+    <label for="re-email">Email</label>
+    <input id="re-email" type="email">
+    <p class="err" id="re-err-email"></p>
+    <label for="re-phone">Mobile number</label>
+    <input id="re-phone" type="tel">
+    <p class="err" id="re-err-phone"></p>
+    <label for="re-date">Pickup date</label>
+    <input id="re-date" type="date">
+    <p class="err" id="re-error" role="alert"></p>
+    <div class="dlg-foot">
+      <button class="btn ghost" data-action="close" data-target="res-edit-dialog">Cancel</button>
+      <button class="btn" id="re-save" data-action="save-res">Save changes</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Confirm delete -->
+<dialog id="confirm-dialog" aria-label="Confirm" data-bd></dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="py">
+"""Admin dashboard (PyScript) for the Flask API.
+
+API used (admin session required for changes):
+  GET /api/categories, GET /api/products, POST/PUT/DELETE /api/products[/<id>]
+  GET /api/reservations, PUT/DELETE /api/reservations/<id>
+Events: click (one handler for every button, using data-action) and input (search and filters).
+"""
+import json
+import js
+from pyscript import document, window, when
+from pyscript.ffi import create_proxy
+
+VIEWS = {"overview": "Overview", "products": "Products", "reservations": "Reservations"}
+
+categories = []  # [{"category_id", "name"}]
+products = []
+reservations = []
+pending = {}  # delete waiting for confirmation
+
+
+# ---------- helpers ----------
+def q(sel):
+    return document.querySelector(sel)
+
+
+def esc(s):
+    return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def money(n):
+    return "₱{:,.2f}".format(float(n or 0))  # e.g. 1250 -> ₱1,250.00
+
+
+def local_today():
+    d = js.Date.new()
+    return "%04d-%02d-%02d" % (d.getFullYear(), d.getMonth() + 1, d.getDate())
+
+
+def toast(text, bad=False):
+    t = q("#toast")
+    t.innerText = text
+    t.className = "show bad" if bad else "show"
+    window.setTimeout(create_proxy(lambda: t.classList.remove("show")), 2600)
+
+
+def show_banner(html):
+    b = q("#banner")
+    b.innerHTML = html
+    b.classList.remove("hidden")
+
+
+def hide_banner():
+    q("#banner").classList.add("hidden")
+
+
+def error_text(data, status):
+    if isinstance(data, dict) and data.get("error"):
+        return str(data["error"])
+    if status in (401, 403):
+        return "Your session expired. Please log in again."
+    return "The server returned an error (%s)." % status
+
+
+def set_err(prefix, field, msg):
+    q("#%s-err-%s" % (prefix, field)).innerText = msg
+    q("#%s-%s" % (prefix, field)).setAttribute("aria-invalid", "true" if msg else "false")
+
+
+async def api(url, method="GET", body=None):
+    init = js.Object.new()
+    init.method = method
+    headers = js.window.Headers.new()
+    headers.set("Content-Type", "application/json")
+    init.headers = headers
+    if body is not None:
+        init.body = json.dumps(body)
+    res = await js.window.fetch(url, init)
+    data = None
+    try:
+        raw = await res.json()
+        data = raw.to_py() if hasattr(raw, "to_py") else raw
+    except Exception:
+        data = None
+    return res.ok, res.status, data
+
+
+def product_by_id(pid):
+    for p in products:
+        if str(p["product_id"]) == str(pid):
+            return p
+
+
+def res_by_id(rid):
+    for r in reservations:
+        if str(r["reservation_id"]) == str(rid):
+            return r
+
+
+def cat_name(cid):
+    for c in categories:
+        if str(c["category_id"]) == str(cid):
+            return c["name"]
+    return "Uncategorized"
+
+
+def res_total(r):
+    total = 0
+    for it in r.get("items", []):
+        p = product_by_id(it["product_id"])
+        if p and p.get("price") is not None:
+            total += p["price"] * it["quantity"]
+    return total
+
+
+def price_chip(p):
+    """Show the previous price badge when the price has changed."""
+    prev = p.get("previous_price")
+    price = p.get("price")
+
+    # Handle missing values and JavaScript null values.
+    if prev is None or price is None:
+        return ""
+
+    try:
+        prev = float(prev)
+        price = float(price)
+    except (TypeError, ValueError):
+        return ""
+
+    if prev == price:
+        return ""
+
+    up = price > prev
+
+    return (
+        '<span class="chg %s">'
+        '<span aria-hidden="true">%s</span>%s, was <s>%s</s>'
+        '</span>'
+    ) % (
+        "up" if up else "down",
+        "▲" if up else "▼",
+        "Raised" if up else "Lowered",
+        money(prev)
+    )
+
+
+def date_badge(d, today):
+    if not d:
+        return '<span class="badge past">Not set</span>'
+    if d == today:
+        return '<span class="badge today">Today</span>'
+    if d > today:
+        return '<span class="badge up">Upcoming</span>'
+    return '<span class="badge past">Past</span>'
+
+
+# ---------- loading ----------
+async def fetch_list(url):
+    try:
+        ok, status, data = await api(url)
+    except Exception:
+        return None
+    return data if ok and isinstance(data, list) else None
+
+
+async def load_all():
+    global categories, products, reservations
+    cats = await fetch_list("/api/categories")
+    prods = await fetch_list("/api/products")
+    ress = await fetch_list("/api/reservations")
+    if prods is None or ress is None:
+        show_banner('Could not load data. Check that the server is running or <a href="/login">log in again</a>.')
+    else:
+        hide_banner()
+    categories = cats or []
+    products = prods or []
+    reservations = ress or []
+    render_all()
+
+
+# ---------- rendering ----------
+def render_all():
+    q("#nav-products-count").innerText = str(len(products))
+    q("#nav-res-count").innerText = str(len(reservations))
+    fill_category_options()
+    render_overview()
+    render_products()
+    render_reservations()
+
+
+def fill_category_options():
+    keep = q("#prod-cat-filter").value
+    opts = '<option value="">All categories</option>'
+    form_opts = '<option value="">Select a category</option>'
+    for c in categories:
+        o = '<option value="%s">%s</option>' % (esc(c["category_id"]), esc(c["name"]))
+        opts += o
+        form_opts += o
+    q("#prod-cat-filter").innerHTML = opts
+    q("#prod-cat-filter").value = keep
+    q("#pf-category").innerHTML = form_opts
+
+
+def render_overview():
+    today = local_today()
+    upcoming = [r for r in reservations if r.get("pickup_date") and r["pickup_date"] >= today]
+    upcoming.sort(key=lambda r: r["pickup_date"])
+    q("#stat-products").innerText = str(len(products))
+    q("#stat-res").innerText = str(len(reservations))
+    q("#stat-today").innerText = str(len([r for r in reservations if r.get("pickup_date") == today]))
+    q("#stat-value").innerText = money(sum(res_total(r) for r in upcoming))
+    if not upcoming:
+        q("#upcoming-list").innerHTML = '<p class="empty-row">No upcoming pickups yet.</p>'
+        return
+    html = ""
+    for r in upcoming[:6]:
+        html += (
+            '<div class="list-row"><div><strong>%s</strong><span class="muted rid">%s</span></div>'
+            "<div>%s %s</div><div><strong>%s</strong></div>"
+            '<button class="btn small ghost" data-action="view-res" data-id="%s">View</button></div>'
+        ) % (esc(r["customer_name"]), esc(r["reservation_id"]), esc(r["pickup_date"]),
+             date_badge(r["pickup_date"], today), money(res_total(r)), esc(r["reservation_id"]))
+    q("#upcoming-list").innerHTML = html
+
+
+def render_products():
+    term = q("#prod-search").value.strip().lower()
+    cat = q("#prod-cat-filter").value
+    html = ""
+    shown = 0
+    for p in products:
+        if term and term not in p["name"].lower():
+            continue
+        if cat and str(p.get("category_id")) != cat:
+            continue
+        shown += 1
+        img = p.get("img_url") or ""
+        thumb = '<div class="thumb"><span>No image</span>%s</div>' % (
+            '<img src="%s" alt="" onerror="this.remove()">' % esc(img) if img else "")
+        price = money(p["price"]) if p.get("price") is not None else "Not set"
+        chip = price_chip(p)
+        if chip:
+            price += "<br>" + chip
+        pid = esc(p["product_id"])
+        html += (
+            "<tr><td>%s</td><td><strong>%s</strong></td><td>%s</td><td>%s</td><td>%s</td>"
+            '<td class="actions"><button class="btn small ghost" data-action="edit-product" data-id="%s">Edit</button>'
+            '<button class="btn small danger" data-action="delete-product" data-id="%s">Delete</button></td></tr>'
+        ) % (thumb, esc(p["name"]), esc(cat_name(p.get("category_id"))), price, esc(p["unit"]), pid, pid)
+    q("#products-body").innerHTML = html or '<tr><td colspan="6" class="empty-row">No products match.</td></tr>'
+    q("#prod-count").innerText = "Showing %d of %d products" % (shown, len(products))
+
+
+def render_reservations():
+    today = local_today()
+    term = q("#res-search").value.strip().lower()
+    mode = q("#res-date-filter").value
+    rows = sorted(reservations, key=lambda r: r.get("created_at") or "", reverse=True)
+    html = ""
+    shown = 0
+    for r in rows:
+        d = r.get("pickup_date")
+        if mode == "today" and d != today:
+            continue
+        if mode == "upcoming" and not (d and d > today):
+            continue
+        if mode == "past" and not (d and d < today):
+            continue
+        if mode == "none" and d:
+            continue
+        hay = " ".join(str(r.get(k) or "") for k in ("reservation_id", "customer_name", "customer_email", "customer_phone")).lower()
+        if term and term not in hay:
+            continue
+        shown += 1
+        rid = esc(r["reservation_id"])
+        html += (
+            '<tr><td><span class="rid">%s</span><br><button class="link" data-action="copy" data-text="%s">Copy</button></td>'
+            '<td><strong>%s</strong><br><span class="muted">%s<br>%s</span></td>'
+            "<td>%s<br>%s</td><td>%d items<br><strong>%s</strong></td>"
+            '<td class="actions"><button class="btn small ghost" data-action="view-res" data-id="%s">View</button>'
+            '<button class="btn small ghost" data-action="edit-res" data-id="%s">Edit</button>'
+            '<button class="btn small danger" data-action="delete-res" data-id="%s">Delete</button></td></tr>'
+        ) % (rid, rid, esc(r["customer_name"]), esc(r["customer_email"]), esc(r["customer_phone"]),
+             esc(d or "Not set"), date_badge(d, today), len(r.get("items", [])), money(res_total(r)), rid, rid, rid)
+    q("#reservations-body").innerHTML = html or '<tr><td colspan="5" class="empty-row">No reservations match.</td></tr>'
+    q("#res-count").innerText = "Showing %d of %d reservations" % (shown, len(reservations))
+
+
+def show_view(name):
+    if name not in VIEWS:
+        name = "overview"
+    for v in VIEWS:
+        q("#view-" + v).classList.add("hidden")
+    q("#view-" + name).classList.remove("hidden")
+    for el in document.querySelectorAll(".nav-link"):
+        if el.getAttribute("data-view") == name:
+            el.classList.add("active")
+        else:
+            el.classList.remove("active")
+    q("#page-title").innerText = VIEWS[name]
+    window.location.hash = name
+
+
+# ---------- product dialog ----------
+def update_preview():
+    url = q("#pf-img").value.strip()
+    q("#pf-preview").innerHTML = "<span>No image</span>" + (
+        '<img src="%s" alt="" onerror="this.remove()">' % esc(url) if url else "")
+
+
+def open_product_dialog(pid):
+    for f in ("name", "unit", "price", "category"):
+        set_err("pf", f, "")
+    q("#pf-error").innerText = ""
+    p = product_by_id(pid) if pid else None
+    q("#pf-title").innerText = "Edit product" if p else "Add product"
+    q("#pf-id").value = str(p["product_id"]) if p else ""
+    q("#pf-name").value = p["name"] if p else ""
+    q("#pf-unit").value = p["unit"] if p else ""
+    q("#pf-price").value = str(p["price"]) if p and p.get("price") is not None else ""
+    q("#pf-category").value = str(p["category_id"]) if p and p.get("category_id") is not None else ""
+    q("#pf-img").value = (p.get("img_url") or "") if p else ""
+    update_preview()
+    q("#product-dialog").showModal()
+
+
+async def save_product():
+    name = q("#pf-name").value.strip()
+    unit = q("#pf-unit").value.strip()
+    cat = q("#pf-category").value
+    img = q("#pf-img").value.strip()
+    try:
+        price = float(q("#pf-price").value)
+    except Exception:
+        price = None
+    whole = price is not None and price >= 0 and price == int(price)  # the database stores whole pesos
+    errs = {
+        "name": "" if name else "Enter the product name.",
+        "unit": "" if unit else "Enter the unit, like 1 kg.",
+        "price": "" if whole else "Enter a whole-number price, like 250.",
+        "category": "" if cat else "Choose a category.",
+    }
+    for f in errs:
+        set_err("pf", f, errs[f])
+    if any(errs.values()):
+        return
+    pid = q("#pf-id").value
+    payload = {"name": name, "unit": unit, "price": int(price), "category_id": int(cat), "img_url": img}
+    btn = q("#pf-save")
+    btn.disabled = True
+    btn.innerText = "Saving..."
+    q("#pf-error").innerText = ""
+    try:
+        if pid:
+            ok, status, data = await api("/api/products/%s" % pid, "PUT", payload)
+        else:
+            ok, status, data = await api("/api/products", "POST", payload)
+    except Exception:
+        ok, status, data = False, 0, {"error": "Could not reach the server."}
+    btn.disabled = False
+    btn.innerText = "Save product"
+    if ok:
+        q("#product-dialog").close()
+        toast("Product saved")
+        await load_all()
+    else:
+        q("#pf-error").innerText = error_text(data, status)
+
+
+# ---------- reservation dialogs ----------
+def open_res_view(rid):
+    r = res_by_id(rid)
+    if not r:
+        return
+    today = local_today()
+    lines = ""
+    total = 0
+    for it in r.get("items", []):
+        p = product_by_id(it["product_id"])
+        if p:
+            name = "%s (%s)" % (p["name"], p["unit"])
+            price = p.get("price")
+        else:
+            name = "Product #%s (removed)" % it["product_id"]
+            price = None
+        sub = (price or 0) * it["quantity"]
+        total += sub
+        lines += '<tr><td>%s</td><td class="r">x%s</td><td class="r">%s</td></tr>' % (
+            esc(name), it["quantity"], money(sub) if price is not None else "-")
+    placed = (r.get("created_at") or "")[:16].replace("T", " ")
+    rid_e = esc(r["reservation_id"])
+    q("#res-view-dialog").innerHTML = (
+        '<div class="dlg-inner"><div class="dlg-head"><h3>Reservation</h3>'
+        '<button class="x" data-action="close" data-target="res-view-dialog" aria-label="Close">&times;</button></div>'
+        '<p class="rid">%s</p>'
+        '<dl class="facts-lite"><dt>Customer</dt><dd>%s</dd><dt>Email</dt><dd>%s</dd><dt>Mobile</dt><dd>%s</dd>'
+        "<dt>Pickup</dt><dd>%s %s</dd><dt>Placed</dt><dd>%s</dd></dl>"
+        '<table class="items"><tbody>%s</tbody></table>'
+        '<p class="total-row"><span>Total</span><span>%s</span></p>'
+        '<div class="dlg-foot"><button class="btn ghost" data-action="edit-res" data-id="%s">Edit details</button>'
+        '<button class="btn" data-action="close" data-target="res-view-dialog">Done</button></div></div>'
+    ) % (rid_e, esc(r["customer_name"]), esc(r["customer_email"]), esc(r["customer_phone"]),
+         esc(r.get("pickup_date") or "Not set"), date_badge(r.get("pickup_date"), today), esc(placed or "-"),
+         lines, money(total), rid_e)
+    q("#res-view-dialog").showModal()
+
+
+def open_res_edit(rid):
+    r = res_by_id(rid)
+    if not r:
+        return
+    q("#res-view-dialog").close()
+    for f in ("name", "email", "phone"):
+        set_err("re", f, "")
+    q("#re-error").innerText = ""
+    q("#re-id").value = str(r["reservation_id"])
+    q("#re-rtn").innerText = str(r["reservation_id"])
+    q("#re-name").value = r["customer_name"]
+    q("#re-email").value = r["customer_email"]
+    q("#re-phone").value = r["customer_phone"]
+    q("#re-date").value = r.get("pickup_date") or ""
+    q("#res-edit-dialog").showModal()
+
+
+async def save_res():
+    name = q("#re-name").value.strip()
+    email = q("#re-email").value.strip()
+    phone = q("#re-phone").value.strip()
+    errs = {
+        "name": "" if name else "Enter the customer name.",
+        "email": "" if "@" in email and "." in email.split("@")[-1] else "Enter a valid email.",
+        "phone": "" if phone else "Enter a mobile number.",
+    }
+    for f in errs:
+        set_err("re", f, errs[f])
+    if any(errs.values()):
+        return
+    payload = {"customer_name": name, "customer_email": email, "customer_phone": phone,
+               "pickup_date": q("#re-date").value}
+    btn = q("#re-save")
+    btn.disabled = True
+    btn.innerText = "Saving..."
+    try:
+        ok, status, data = await api("/api/reservations/%s" % q("#re-id").value, "PUT", payload)
+    except Exception:
+        ok, status, data = False, 0, {"error": "Could not reach the server."}
+    btn.disabled = False
+    btn.innerText = "Save changes"
+    if ok:
+        q("#res-edit-dialog").close()
+        toast("Reservation updated")
+        await load_all()
+    else:
+        q("#re-error").innerText = error_text(data, status)
+
+
+# ---------- delete with confirmation ----------
+def ask_delete(kind, key, title, message):
+    pending["kind"] = kind
+    pending["key"] = key
+    q("#confirm-dialog").innerHTML = (
+        '<div class="dlg-inner"><div class="dlg-head"><h3>%s</h3></div><p>%s</p>'
+        '<div class="dlg-foot"><button class="btn ghost" data-action="close" data-target="confirm-dialog">Cancel</button>'
+        '<button class="btn bad" data-action="confirm-yes">Delete</button></div></div>'
+    ) % (esc(title), esc(message))
+    q("#confirm-dialog").showModal()
+
+
+async def do_delete():
+    kind, key = pending.get("kind"), pending.get("key")
+    q("#confirm-dialog").close()
+    url = "/api/products/%s" % key if kind == "product" else "/api/reservations/%s" % key
+    try:
+        ok, status, data = await api(url, "DELETE")
+    except Exception:
+        ok, status, data = False, 0, {"error": "Could not reach the server."}
+    if ok:
+        toast("Deleted")
+        await load_all()
+    elif kind == "product" and status >= 500:
+        toast("This product could not be deleted. It may be part of existing reservations.", True)
+    else:
+        toast(error_text(data, status), True)
+
+
+# ---------- events ----------
+@when("click", "body")
+async def on_click(event):
+    t = event.target
+    if t.tagName == "DIALOG" and t.hasAttribute("data-bd"):
+        t.close()  # click on the dark area outside a view or confirm popup
+        return
+    el = t.closest("[data-action]")
+    if not el:
+        return
+    act = el.getAttribute("data-action")
+    key = el.getAttribute("data-id")
+    if act == "nav":
+        show_view(el.getAttribute("data-view"))
+    elif act == "close":
+        q("#" + el.getAttribute("data-target")).close()
+    elif act == "add-product":
+        open_product_dialog(None)
+    elif act == "edit-product":
+        open_product_dialog(key)
+    elif act == "save-product":
+        await save_product()
+    elif act == "delete-product":
+        p = product_by_id(key)
+        ask_delete("product", key, "Delete product", "Delete %s? This cannot be undone." % (p["name"] if p else "this product"))
+    elif act == "view-res":
+        open_res_view(key)
+    elif act == "edit-res":
+        open_res_edit(key)
+    elif act == "save-res":
+        await save_res()
+    elif act == "delete-res":
+        r = res_by_id(key)
+        q("#res-view-dialog").close()
+        ask_delete("reservation", key, "Delete reservation", "Delete the reservation of %s? This cannot be undone." % (r["customer_name"] if r else "this customer"))
+    elif act == "confirm-yes":
+        await do_delete()
+    elif act == "copy":
+        window.navigator.clipboard.writeText(el.getAttribute("data-text"))
+        toast("RTN copied")
+
+
+@when("input", "body")
+def on_input(event):
+    i = event.target.id
+    if i in ("prod-search", "prod-cat-filter"):
+        render_products()
+    elif i in ("res-search", "res-date-filter"):
+        render_reservations()
+    elif i == "pf-img":
+        update_preview()
+
+
+# ---------- startup ----------
+show_view(window.location.hash[1:] if window.location.hash else "overview")
+await load_all()
+</script>
+</body>
+</html>
